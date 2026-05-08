@@ -31,6 +31,7 @@ Recommended order:
 - Languages: Hebrew, English, Russian, French
 - Local profile images from `pic/`
 - External actions: choose multiple entities from Home Assistant and trigger them from a hero popup
+- Optional unlock PIN protection with numeric keypad popup (`Enter` to confirm)
 
 ## Install
 
@@ -68,7 +69,7 @@ Check these quickly:
    - Manual install: `/config/www/byd-card/byd-3d-card.js`
    - HACS install: `/config/www/community/<repository-name>/byd-3d-card-hacs.js`
 4. If browser/app cache is stale, add a version query:
-   - `/hacsfiles/<repository-name>/byd-3d-card-hacs.js?v=1.0.11`
+   - `/hacsfiles/<repository-name>/byd-3d-card-hacs.js?v=1.0.12`
 5. Then hard refresh the browser/app again.
 
 ## Basic YAML
@@ -85,6 +86,8 @@ show_actions: true
 show_climate: true
 show_vehicle: true
 show_location: true
+require_unlock_pin: false
+unlock_pin_code: ""
 tire_pressure_unit: psi
 refresh_interval_seconds: 25
 language: he
@@ -106,11 +109,45 @@ entities: {}
 - `psi`
 - `kpa`
 
+`require_unlock_pin` and `unlock_pin_code`:
+- Set `require_unlock_pin: true` to require PIN verification before unlock action.
+- PIN must be 4-8 digits.
+- When PIN is enabled, unlock confirmation uses a numeric keypad popup (`0-9`, `Clear`, `Enter`).
+- Security note: the PIN is saved in Lovelace card config, so treat dashboard edit access as sensitive.
+
 `custom_entities`:
 - Any entity IDs from any domain.
 - A script icon appears on the hero image (left-bottom, aligned with lock badge).
 - Tap it to open a 3-column popup grid with buttons for selected entities.
 - In card editor, each selected entity can get a custom icon (for example `mdi:gate-open`).
+
+## How to enable unlock PIN (step by step)
+
+1. Open dashboard edit mode and click card `Edit`.
+2. In `Categories`, enable `Require PIN before unlock`.
+3. In `Vehicle unlock PIN`, enter 4-8 digits.
+4. Click `Save`.
+5. Test by tapping `Unlock`:
+   - The popup asks confirmation.
+   - Numeric keypad is shown.
+   - Enter PIN and press `Enter`.
+
+YAML equivalent:
+
+```yaml
+require_unlock_pin: true
+unlock_pin_code: "1234"
+```
+
+## External actions setup (step by step)
+
+1. Open card `Edit`.
+2. In `External actions`, enable `Enable external actions`.
+3. Click `Open settings`.
+4. Search and add entities to the selected list.
+5. Optional: set custom label and icon for each selected entity.
+6. Click `Save`.
+7. In the card hero area, tap the external actions icon to open the popup and run actions.
 
 ## Files
 
@@ -183,6 +220,13 @@ What it shows:
   - Close windows
 - Active button highlighting and visual feedback
 
+### 4.1) Unlock PIN keypad popup
+Use this flow to protect unlock action with PIN:
+- Enable `Require PIN before unlock` in editor
+- Enter 4-8 digit PIN in `Vehicle unlock PIN`
+- Unlock action opens numeric keypad popup
+- Press `Enter` after typing the PIN
+
 ### 5) Tires
 ![Tires category](docs/screenshots/05-tires-view.png)
 
@@ -202,6 +246,11 @@ What it shows:
 - Entity prefix
 - Language picker with flags
 - Live preview on the right
+
+### 6.1) External actions + PIN options in editor
+In editor you can configure:
+- External actions toggle and selected entities
+- Unlock PIN requirement and PIN code field
 
 ### 7) Editor categories (Hebrew)
 ![Editor categories Hebrew](docs/screenshots/07-editor-categories-he.png)

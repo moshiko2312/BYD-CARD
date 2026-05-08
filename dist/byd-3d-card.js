@@ -4,7 +4,7 @@
 
 const CARD_TYPE = "byd-3d-card";
 const CARD_NAME = "BYD 3D Card";
-const CARD_VERSION = "1.0.11";
+const CARD_VERSION = "1.0.12";
 const DEFAULT_ASSET_BASE_PATH = (() => {
   try {
     const base = new URL(".", import.meta.url).pathname;
@@ -218,6 +218,8 @@ const DEFAULT_CONFIG = {
   seat_passenger_mode: "heat",
   show_vehicle: true,
   show_location: true,
+  require_unlock_pin: false,
+  unlock_pin_code: "",
   show_external_entities: true,
   tire_pressure_unit: "psi",
   refresh_interval_seconds: 25,
@@ -393,6 +395,9 @@ const FALLBACK_I18N = {
   seat_mode_both: "שניהם",
   settings_show_vehicle: "הצג רכב",
   settings_show_location: "הצג מיקום",
+  settings_require_unlock_pin: "דרוש קוד PIN לפני פתיחה",
+  settings_unlock_pin_code: "קוד PIN לפתיחת רכב",
+  settings_unlock_pin_hint: "הזן 4-8 ספרות. הקוד נשמר בהגדרות הכרטיס.",
   settings_external_actions: "פעולות חיצוניות",
   settings_show_external_entities: "הפעל פעולות חיצוניות",
   settings_external_config_open: "פתח הגדרות",
@@ -438,6 +443,12 @@ const FALLBACK_I18N = {
   comfort_21: "נוחות 21°",
   alert_header: "התראת רכב",
   confirm_unlock: "האם אתה בטוח שברצונך לפתוח את הרכב?",
+  unlock_pin_placeholder: "הזן PIN",
+  unlock_pin_clear: "ניקוי",
+  unlock_pin_enter: "Enter",
+  unlock_pin_required: "נא להזין קוד PIN.",
+  unlock_pin_incorrect: "קוד PIN שגוי.",
+  unlock_pin_not_configured: "לא הוגדר קוד PIN תקין בהגדרות הכרטיס.",
   executed: "בוצע",
   alert_more: "תקלות נוספות",
   alert_tire_pressure_low: "לחץ אוויר נמוך",
@@ -563,6 +574,16 @@ function normalizeExternalEntitiesEnabled(value) {
   return value !== false;
 }
 
+function normalizeUnlockPinEnabled(value) {
+  return value === true;
+}
+
+function normalizeUnlockPinCode(value) {
+  return String(value || "")
+    .replace(/\D+/g, "")
+    .slice(0, 8);
+}
+
 function normalizeImageBasePath(value) {
   const cleaned = String(value || "").trim().replace(/\/$/, "");
   if (!cleaned) return DEFAULT_IMAGE_BASE_PATH;
@@ -671,6 +692,8 @@ class Byd3DCard extends HTMLElement {
     );
     this._config.show_seat_cooling = this._config.seat_passenger_mode === "cool";
     this._config.show_external_entities = normalizeExternalEntitiesEnabled(this._config.show_external_entities);
+    this._config.require_unlock_pin = normalizeUnlockPinEnabled(this._config.require_unlock_pin);
+    this._config.unlock_pin_code = normalizeUnlockPinCode(this._config.unlock_pin_code);
     this._config.category_order = this._normalizeCategoryOrder(this._config.category_order);
     this._config.tire_pressure_unit = normalizeTirePressureUnit(this._config.tire_pressure_unit);
     this._config.image_base_path = normalizeImageBasePath(this._config.image_base_path);
@@ -1275,6 +1298,67 @@ class Byd3DCard extends HTMLElement {
     return this._hass.states[eid];
   }
 
+  _isUnlockPinRequired() {
+    return normalizeUnlockPinEnabled(this._config?.require_unlock_pin);
+  }
+
+  _configuredUnlockPin() {
+    return normalizeUnlockPinCode(this._config?.unlock_pin_code);
+  }
+
+  _validateUnlockPin(inputValue) {
+    if (!this._isUnlockPinRequired()) return { ok: true, error: "" };
+    const expectedPin = this._configuredUnlockPin();
+    if (expectedPin.length < 4) return { ok: false, error: this._t("unlock_pin_not_configured") };
+    const providedPin = normalizeUnlockPinCode(inputValue);
+    if (!providedPin) return { ok: false, error: this._t("unlock_pin_required") };
+    if (providedPin !== expectedPin) return { ok: false, error: this._t("unlock_pin_incorrect") };
+    return { ok: true, error: "" };
+  }
+
+  _setConfirmationPinValue(value, error = "") {
+    if (!this._confirmation) return;
+    this._confirmation = {
+      ...this._confirmation,
+      pinValue: normalizeUnlockPinCode(value),
+      pinError: error || "",
+    };
+    this._render();
+  }
+
+  _applyConfirmationPinKey(key) {
+    if (!this._confirmation) return;
+    const current = normalizeUnlockPinCode(this._confirmation.pinValue);
+    if (key === "clear") {
+      this._setConfirmationPinValue("", "");
+      return;
+    }
+    if (key === "backspace") {
+      this._setConfirmationPinValue(current.slice(0, -1), "");
+      return;
+    }
+    if (!/^\d$/.test(String(key))) return;
+    this._setConfirmationPinValue(`${current}${key}`, "");
+  }
+
+  _submitConfirmationUnlock() {
+    if (!this._confirmation) return;
+    if (this._confirmation.type !== "unlock" && this._confirmation.type !== "unlock_entity") return;
+    const pinValue = this._confirmation.pinValue || "";
+    const pinValidation = this._validateUnlockPin(pinValue);
+    if (!pinValidation.ok) {
+      this._setConfirmationPinValue(pinValue, pinValidation.error);
+      return;
+    }
+    if (this._confirmation.type === "unlock") {
+      this._callLock(this._confirmation.key, true);
+    } else if (this._confirmation.type === "unlock_entity" && this._confirmation.entityId && this._hass) {
+      this._hass.callService("lock", "unlock", { entity_id: this._confirmation.entityId });
+      this._schedulePostActionRefresh();
+    }
+    this._hideConfirmation();
+  }
+
   _callToggle(logicalKey) {
     const eid = this._resolveEntity(logicalKey);
     if (!eid || !this._hass) return;
@@ -1284,9 +1368,11 @@ class Byd3DCard extends HTMLElement {
     if (domain === "lock") {
       const state = this._state(logicalKey)?.state;
       const isLocked = state === "locked" || state === "off";
-      const service = isLocked ? "unlock" : "lock";
-      this._hass.callService("lock", service, { entity_id: eid });
-      this._schedulePostActionRefresh();
+      if (isLocked) {
+        this._showConfirmation("unlock", { key: logicalKey });
+        return;
+      }
+      this._callLock(logicalKey, false);
       return;
     }
 
@@ -1303,7 +1389,7 @@ class Byd3DCard extends HTMLElement {
   }
 
   _showConfirmation(type, payload = {}) {
-    this._confirmation = { type, ...payload };
+    this._confirmation = { type, pinValue: "", pinError: "", ...payload };
     this._render();
   }
 
@@ -1504,7 +1590,11 @@ class Byd3DCard extends HTMLElement {
     if (domain === "lock") {
       const state = this._hass.states?.[entityId]?.state;
       const isLocked = state === "locked" || state === "off";
-      this._hass.callService("lock", isLocked ? "unlock" : "lock", { entity_id: entityId });
+      if (isLocked) {
+        this._showConfirmation("unlock_entity", { entityId });
+        return;
+      }
+      this._hass.callService("lock", "lock", { entity_id: entityId });
       this._schedulePostActionRefresh();
       return;
     }
@@ -2219,12 +2309,45 @@ class Byd3DCard extends HTMLElement {
     const activeTab = visibleTabs.find((tab) => tab.key === this._activeCategory) || visibleTabs[0];
     this._persistActiveCategory(activeTab?.key);
     const activeContent = activeTab?.content || "";
+    const pinRequired =
+      (this._confirmation?.type === "unlock" || this._confirmation?.type === "unlock_entity") &&
+      this._isUnlockPinRequired();
+    const unlockPinRawValue = normalizeUnlockPinCode(this._confirmation?.pinValue || "");
+    const unlockPinMaskedValue = escapeHtml(unlockPinRawValue.replace(/\d/g, "•"));
+    const unlockPinError = this._confirmation?.pinError || "";
     const confirmationOverlay = this._confirmation
       ? `
         <div class="dialog-backdrop" data-dialog-backdrop>
           <div class="dialog-card">
             <div class="dialog-title">${this._t("unlock")}</div>
             <div class="dialog-text">${this._t("confirm_unlock")}</div>
+            ${
+              pinRequired
+                ? `
+              <div class="dialog-pin-wrap">
+                <div class="dialog-pin-display ${unlockPinRawValue ? "has-value" : ""}">
+                  ${unlockPinMaskedValue || this._t("unlock_pin_placeholder")}
+                </div>
+                <div class="dialog-pin-keypad">
+                  <button class="dialog-pin-key" data-pin-key="1">1</button>
+                  <button class="dialog-pin-key" data-pin-key="2">2</button>
+                  <button class="dialog-pin-key" data-pin-key="3">3</button>
+                  <button class="dialog-pin-key" data-pin-key="4">4</button>
+                  <button class="dialog-pin-key" data-pin-key="5">5</button>
+                  <button class="dialog-pin-key" data-pin-key="6">6</button>
+                  <button class="dialog-pin-key" data-pin-key="7">7</button>
+                  <button class="dialog-pin-key" data-pin-key="8">8</button>
+                  <button class="dialog-pin-key" data-pin-key="9">9</button>
+                  <button class="dialog-pin-key action" data-pin-key="clear">${this._t("unlock_pin_clear")}</button>
+                  <button class="dialog-pin-key" data-pin-key="0">0</button>
+                  <button class="dialog-pin-key action enter" data-pin-key="enter">${this._t("unlock_pin_enter")}</button>
+                </div>
+                <div class="dialog-pin-hint">${this._t("settings_unlock_pin_hint")}</div>
+                ${unlockPinError ? `<div class="dialog-pin-error">${escapeHtml(unlockPinError)}</div>` : ""}
+              </div>
+            `
+                : ""
+            }
             <div class="dialog-actions">
               <button class="dialog-btn cancel" data-dialog-action="cancel">${this._t("no")}</button>
               <button class="dialog-btn confirm" data-dialog-action="confirm">${this._t("unlock")}</button>
@@ -2569,6 +2692,70 @@ class Byd3DCard extends HTMLElement {
           line-height: 1.6;
           color: rgba(235,245,255,.86);
           text-align: center;
+        }
+        .dialog-pin-wrap {
+          display: grid;
+          gap: 6px;
+          margin: 0 0 14px;
+        }
+        .dialog-pin-display {
+          border: 1px solid rgba(157,190,220,.3);
+          background: linear-gradient(180deg, rgba(17,23,33,.86), rgba(13,18,27,.9));
+          border-radius: 12px;
+          min-height: 42px;
+          padding: 8px 12px;
+          color: #e8f2fb;
+          font-size: 16px;
+          letter-spacing: .2em;
+          text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .dialog-pin-display.has-value {
+          color: #f2f9ff;
+        }
+        .dialog-pin-keypad {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 8px;
+          margin-top: 4px;
+        }
+        .dialog-pin-key {
+          appearance: none;
+          border: 1px solid rgba(157,190,220,.24);
+          background: linear-gradient(180deg, rgba(20,29,40,.9), rgba(12,18,28,.94));
+          border-radius: 12px;
+          min-height: 40px;
+          color: #e8f2fb;
+          font-size: 15px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: transform .14s ease, filter .14s ease, border-color .2s ease;
+        }
+        .dialog-pin-key:hover {
+          transform: translateY(-1px);
+          filter: brightness(1.06);
+        }
+        .dialog-pin-key.action {
+          font-size: 12px;
+          font-weight: 700;
+        }
+        .dialog-pin-key.enter {
+          border-color: rgba(76,160,255,.42);
+          background: linear-gradient(180deg, #5cb0ff, #1e5fbf);
+          color: #fff;
+        }
+        .dialog-pin-hint {
+          font-size: 11px;
+          color: rgba(207,225,242,.72);
+          text-align: center;
+        }
+        .dialog-pin-error {
+          font-size: 12px;
+          color: #ff9f9f;
+          text-align: center;
+          font-weight: 700;
         }
         .dialog-actions {
           display: grid;
@@ -3817,11 +4004,20 @@ class Byd3DCard extends HTMLElement {
           return;
         }
         if (action === "confirm") {
-          if (this._confirmation?.type === "unlock") {
-            this._callLock(this._confirmation.key, true);
-          }
-          this._hideConfirmation();
+          this._submitConfirmationUnlock();
         }
+      });
+    });
+
+    this.shadowRoot.querySelectorAll("[data-pin-key]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const key = btn.getAttribute("data-pin-key");
+        if (!key) return;
+        if (key === "enter") {
+          this._submitConfirmationUnlock();
+          return;
+        }
+        this._applyConfirmationPinKey(key);
       });
     });
 
@@ -3876,6 +4072,8 @@ class Byd3DCardEditor extends HTMLElement {
     );
     this._config.show_seat_cooling = this._config.seat_passenger_mode === "cool";
     this._config.show_external_entities = normalizeExternalEntitiesEnabled(this._config.show_external_entities);
+    this._config.require_unlock_pin = normalizeUnlockPinEnabled(this._config.require_unlock_pin);
+    this._config.unlock_pin_code = normalizeUnlockPinCode(this._config.unlock_pin_code);
     this._config.category_order = this._normalizeCategoryOrder(this._config.category_order);
     this._config.tire_pressure_unit = normalizeTirePressureUnit(this._config.tire_pressure_unit);
     this._config.image_base_path = normalizeImageBasePath(this._config.image_base_path);
@@ -4651,6 +4849,20 @@ class Byd3DCardEditor extends HTMLElement {
               <label class="toggle-chip"><input id="show_tires" type="checkbox" ${this._config.show_tires ? "checked" : ""}/> <span>${this._t("settings_show_tires")}</span></label>
               <label class="toggle-chip"><input id="show_actions" type="checkbox" ${this._config.show_actions ? "checked" : ""}/> <span>${this._t("settings_show_actions")}</span></label>
               <label class="toggle-chip"><input id="show_location" type="checkbox" ${this._config.show_location ? "checked" : ""}/> <span>${this._t("settings_show_location")}</span></label>
+              <label class="toggle-chip"><input id="require_unlock_pin" type="checkbox" ${normalizeUnlockPinEnabled(this._config.require_unlock_pin) ? "checked" : ""}/> <span>${this._t("settings_require_unlock_pin")}</span></label>
+              <div class="field">
+                <label>${this._t("settings_unlock_pin_code")}</label>
+                <input
+                  id="unlock_pin_code"
+                  type="password"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="8"
+                  value="${escapeHtml(normalizeUnlockPinCode(this._config.unlock_pin_code))}"
+                  placeholder="1234"
+                />
+                <small>${this._t("settings_unlock_pin_hint")}</small>
+              </div>
             </div>
           </section>
 
@@ -5377,6 +5589,8 @@ class Byd3DCardEditor extends HTMLElement {
         show_tires: this.shadowRoot.getElementById("show_tires").checked,
         show_actions: this.shadowRoot.getElementById("show_actions").checked,
         show_location: this.shadowRoot.getElementById("show_location").checked,
+        require_unlock_pin: normalizeUnlockPinEnabled(this.shadowRoot.getElementById("require_unlock_pin")?.checked),
+        unlock_pin_code: normalizeUnlockPinCode(this.shadowRoot.getElementById("unlock_pin_code")?.value),
         show_external_entities: normalizeExternalEntitiesEnabled(
           this.shadowRoot.getElementById("show_external_entities")?.checked
         ),
@@ -5419,6 +5633,8 @@ class Byd3DCardEditor extends HTMLElement {
     bindChange("show_tires");
     bindChange("show_actions");
     bindChange("show_location");
+    bindChange("require_unlock_pin");
+    bindChange("unlock_pin_code");
 
     this.shadowRoot.querySelectorAll("[data-add-custom-entity]").forEach((btn) => {
       btn.addEventListener("click", () => {
