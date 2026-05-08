@@ -227,6 +227,8 @@ Use this flow to protect unlock action with PIN:
 - Unlock action opens numeric keypad popup
 - Press `Enter` after typing the PIN
 
+![Unlock PIN keypad popup](docs/screenshots/09-unlock-pin-keypad-popup.png)
+
 ### 5) Tires
 ![Tires category](docs/screenshots/05-tires-view.png)
 
@@ -251,6 +253,19 @@ What it shows:
 In editor you can configure:
 - External actions toggle and selected entities
 - Unlock PIN requirement and PIN code field
+
+![Editor unlock PIN settings](docs/screenshots/10-editor-unlock-pin-settings.png)
+![Editor external actions panel](docs/screenshots/11-editor-external-actions-panel.png)
+![Editor PIN + external actions overview](docs/screenshots/13-editor-pin-and-actions-overview.png)
+![Editor live preview for external actions popup](docs/screenshots/14-editor-live-preview-external-actions.png)
+
+### 6.2) External actions popup
+![External actions popup](docs/screenshots/12-external-actions-popup.png)
+
+What it shows:
+- The hero popup opened from the external actions icon
+- Selected entities shown as quick action tiles
+- Live state text under each action
 
 ### 7) Editor categories (Hebrew)
 ![Editor categories Hebrew](docs/screenshots/07-editor-categories-he.png)
