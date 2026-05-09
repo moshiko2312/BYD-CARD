@@ -146,6 +146,21 @@ const VEHICLE_PROFILES = {
     image: PROFILE_IMAGES.sealion7,
     icon: "mdi:car-estate",
   },
+  atto2: {
+    label: "BYD ATTO 2",
+    image: PROFILE_IMAGES.atto3,
+    icon: "mdi:car-electric",
+  },
+  dolphin_surf: {
+    label: "BYD DOLPHIN SURF",
+    image: PROFILE_IMAGES.dolphin,
+    icon: "mdi:car-electric-outline",
+  },
+  tang: {
+    label: "BYD TANG",
+    image: PROFILE_IMAGES.sealion7,
+    icon: "mdi:car-estate",
+  },
 };
 
 const PROFILE_DEFAULTS = {
@@ -153,6 +168,9 @@ const PROFILE_DEFAULTS = {
   seal: { title: "BYD SEAL", entity_prefix: "byd_seal" },
   dolphin: { title: "BYD DOLPHIN", entity_prefix: "byd_dolphin" },
   sealion7: { title: "BYD SEALION 7", entity_prefix: "byd_sealion_7" },
+  atto2: { title: "BYD ATTO 2", entity_prefix: "byd_atto_2" },
+  dolphin_surf: { title: "BYD DOLPHIN SURF", entity_prefix: "byd_dolphin_surf" },
+  tang: { title: "BYD TANG", entity_prefix: "byd_tang" },
 };
 
 const ENTITY_HINTS = {
@@ -1059,6 +1077,9 @@ class Byd3DCard extends HTMLElement {
       seal: `${basePath}/seal.png`,
       dolphin: `${basePath}/byd_dolphin.png`,
       sealion7: `${basePath}/sealion.png`,
+      atto2: `${basePath}/ATTO2.png`,
+      dolphin_surf: `${basePath}/dolphin_surf.png`,
+      tang: `${basePath}/TANG.png`,
     };
     return localMap[profileKey] || null;
   }
@@ -4251,6 +4272,9 @@ class Byd3DCardEditor extends HTMLElement {
           seal: `${basePath}/seal.png`,
           dolphin: `${basePath}/byd_dolphin.png`,
           sealion7: `${basePath}/sealion.png`,
+          atto2: `${basePath}/ATTO2.png`,
+          dolphin_surf: `${basePath}/dolphin_surf.png`,
+          tang: `${basePath}/TANG.png`,
         };
         const localImage = localImages[key] || profile.image;
         return `
@@ -4269,6 +4293,7 @@ class Byd3DCardEditor extends HTMLElement {
       { key: "en", label: "English", flag: "🇺🇸" },
       { key: "ru", label: "Русский", flag: "🇷🇺" },
       { key: "fr", label: "Français", flag: "🇫🇷" },
+      { key: "ca", label: "Català", flag: "🇦🇩" },
     ];
     return langs
       .map((lang) => {
