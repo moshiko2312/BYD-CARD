@@ -17,7 +17,7 @@ Recommended order:
 ## Features
 
 - 3D hero layout for vehicle image and battery status
-- Vehicle profiles: `ATTO 3`, `SEAL`, `DOLPHIN`, `SEALION 7`
+- Vehicle profiles: `ATTO 3`, `SEAL`, `DOLPHIN`, `SEALION 7`, `ATTO 2`, `DOLPHIN SURF`, `TANG`
 - Auto entity mapping via `entity_prefix`
 - Category tabs (radio style):
   - `Summary`
@@ -28,7 +28,7 @@ Recommended order:
   - `Quick actions`
 - Drag & drop category order in UI editor
 - Last selected category is remembered after refresh
-- Languages: Hebrew, English, Russian, French
+- Languages: Hebrew, English, Russian, French, Catalan
 - Local profile images from `pic/`
 - External actions: choose multiple entities from Home Assistant and trigger them from a hero popup
 - Optional unlock PIN protection with numeric keypad popup (`Enter` to confirm)
@@ -69,7 +69,7 @@ Check these quickly:
    - Manual install: `/config/www/byd-card/byd-3d-card.js`
    - HACS install: `/config/www/community/<repository-name>/byd-3d-card-hacs.js`
 4. If browser/app cache is stale, add a version query:
-   - `/hacsfiles/<repository-name>/byd-3d-card-hacs.js?v=1.0.12`
+   - `/hacsfiles/<repository-name>/byd-3d-card-hacs.js?v=1.0.13`
 5. Then hard refresh the browser/app again.
 
 ## Basic YAML
@@ -164,6 +164,9 @@ unlock_pin_code: "1234"
 - `pic/sealion.png` - BYD SEALION 7 source profile image
 - `pic/byd_seal.png` - resized SEAL variant (450x273)
 - `pic/byd_sealion7.png` - resized SEALION 7 variant (450x273)
+- `pic/ATTO2.png` - BYD ATTO 2 profile image
+- `pic/dolphin_surf.png` - BYD DOLPHIN SURF profile image
+- `pic/TANG.png` - BYD TANG profile image
 
 ### Preview
 
@@ -283,6 +286,14 @@ What it shows:
 - Full English editor labels
 - Same category visibility + ordering workflow
 - Live preview in English
+
+### 9) Catalan + new vehicle profiles
+![Editor with Catalan and extended vehicle profiles](docs/screenshots/15-editor-catalan-and-new-profiles.png)
+
+What it shows:
+- Catalan (`Català`) language support in the editor
+- New vehicle profiles in selection grid: `ATTO 2`, `DOLPHIN SURF`, `TANG`
+- Live preview with the new `TANG` profile
 
 ## Notes
 
