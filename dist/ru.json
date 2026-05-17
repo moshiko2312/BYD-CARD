@@ -166,5 +166,14 @@
   "settings_refresh_interval_hint": "Как часто обновлять статус с сервера (рекомендуется 20-30)",
   "settings_category_order": "Порядок категорий",
   "settings_category_order_hint": "Перетащите, чтобы изменить порядок кнопок категорий",
-  "settings_show_seat_cooling": "Показывать охлаждение сидений"
+  "settings_show_seat_cooling": "Показывать охлаждение сидений",
+  "settings_charging_cost_per_kwh_ac": "Стоимость AC за кВт⋅ч",
+  "settings_charging_cost_per_kwh_dc": "Стоимость DC за кВт⋅ч",
+  "settings_charging_type_default": "Тип зарядки по умолчанию",
+  "charging_type_default_ac": "AC (медленная)",
+  "charging_type_default_dc": "DC (быстрая)",
+  "charging_type_value": "Тип зарядки",
+  "settings_charging_type_infer_from_power": "Определять AC/DC по мощности зарядки",
+  "settings_charging_type_power_ac_min_w": "Нижний порог обычной зарядки (Вт)",
+  "settings_charging_type_power_ac_max_w": "Верхний порог обычной зарядки (Вт)"
 }

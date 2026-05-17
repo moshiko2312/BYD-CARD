@@ -110,5 +110,14 @@
   "charging_period_sensor": "Actual",
   "charging_rate_value": "Cost per kWh",
   "charging_total_cost": "Cost estimat",
-  "charging_cost_unavailable": "No hi ha dades de consum disponibles"
+  "charging_cost_unavailable": "No hi ha dades de consum disponibles",
+  "settings_charging_cost_per_kwh_ac": "Cost AC per kWh",
+  "settings_charging_cost_per_kwh_dc": "Cost DC per kWh",
+  "settings_charging_type_default": "Tipus de càrrega per defecte",
+  "charging_type_default_ac": "AC (lenta)",
+  "charging_type_default_dc": "DC (ràpida)",
+  "charging_type_value": "Tipus de càrrega",
+  "settings_charging_type_infer_from_power": "Detecta AC/DC segons la potència de càrrega",
+  "settings_charging_type_power_ac_min_w": "Llindar inferior de càrrega normal (W)",
+  "settings_charging_type_power_ac_max_w": "Llindar superior de càrrega normal (W)"
 }

@@ -4,7 +4,7 @@
 
 const CARD_TYPE = "byd-3d-card";
 const CARD_NAME = "BYD 3D Card";
-const CARD_VERSION = "1.0.16";
+const CARD_VERSION = "1.0.17";
 const DEFAULT_ASSET_BASE_PATH = (() => {
   try {
     const base = new URL(".", import.meta.url).pathname;
@@ -206,6 +206,19 @@ const ENTITY_HINTS = {
       "session_energy",
     ],
   },
+  charging_type: {
+    domains: ["sensor", "binary_sensor", "select"],
+    suffixes: [
+      "charging_type",
+      "charge_type",
+      "charger_type",
+      "charging_mode",
+      "charge_mode",
+      "fast_charging",
+      "dc_charging",
+      "ac_charging",
+    ],
+  },
   battery_power: { domains: ["sensor"], suffixes: ["battery_power"] },
   climate: { domains: ["climate", "switch"], suffixes: ["climate", "a_c_on", "car_on"] },
   ac_switch: { domains: ["switch"], suffixes: ["a_c_on", "climate", "car_on"] },
@@ -270,6 +283,12 @@ const DEFAULT_CONFIG = {
   show_external_entities: true,
   show_charging_cost: false,
   charging_cost_per_kwh: 0,
+  charging_cost_per_kwh_ac: 0,
+  charging_cost_per_kwh_dc: 0,
+  charging_type_default: "ac",
+  charging_type_infer_from_power: true,
+  charging_type_power_ac_min_w: 10000,
+  charging_type_power_ac_max_w: 16000,
   charging_cost_mode: "monthly",
   tire_pressure_unit: "psi",
   refresh_interval_seconds: 25,
@@ -449,6 +468,14 @@ const FALLBACK_I18N = {
   settings_show_charging_cost: "הצג עלות טעינה",
   settings_charging_cost_per_kwh: "מחיר לקוט״ש",
   settings_charging_cost_per_kwh_hint: "הערך משמש לחישוב עלות הטעינה לפי אנרגיה נצרכת",
+  settings_charging_cost_per_kwh_ac: "מחיר לקוט״ש בטעינת AC",
+  settings_charging_cost_per_kwh_dc: "מחיר לקוט״ש בטעינת DC",
+  settings_charging_type_default: "סוג טעינה כברירת מחדל",
+  charging_type_default_ac: "AC (איטית)",
+  charging_type_default_dc: "DC (מהירה)",
+  settings_charging_type_infer_from_power: "זיהוי AC/DC לפי הספק טעינה",
+  settings_charging_type_power_ac_min_w: "סף תחתון לטעינה רגילה (W)",
+  settings_charging_type_power_ac_max_w: "סף עליון לטעינה רגילה (W)",
   settings_charging_cost_mode: "אופן חישוב צריכה",
   charging_cost_mode_monthly: "חודשי פנימי",
   charging_cost_mode_sensor: "ערך חיישן נוכחי",
@@ -481,8 +508,10 @@ const FALLBACK_I18N = {
   charging_cost_title: "עלות טעינה",
   charging_cost_subtitle: "חישוב לפי אנרגיית טעינה ומחיר לקוט״ש",
   charging_consumption_value: "צריכה",
+  charging_type_value: "סוג טעינה",
   charging_period_value: "תקופה",
   charging_period_sensor: "נוכחי",
+  charging_duration_value: "משך טעינה",
   charging_rate_value: "מחיר לקוט״ש",
   charging_total_cost: "עלות משוערת",
   charging_cost_unavailable: "אין נתוני צריכה זמינים",
@@ -623,6 +652,12 @@ function toNumber(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+function toFiniteNumberOrNull(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 function normalizeSeatPassengerMode(value, fallbackShowCooling = false) {
   const raw = String(value || "").trim().toLowerCase();
   if (raw === "cool" || raw === "cooling") return "cool";
@@ -665,6 +700,21 @@ function normalizeChargingCostPerKwh(value) {
 function normalizeChargingCostMode(value) {
   const raw = String(value || "").trim().toLowerCase();
   return raw === "sensor" ? "sensor" : "monthly";
+}
+
+function normalizeChargingTypeDefault(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  return raw === "dc" ? "dc" : "ac";
+}
+
+function normalizeChargingTypeInferFromPower(value) {
+  return value !== false;
+}
+
+function normalizeChargingTypePowerThreshold(value, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return clamp(Math.round(n), 0, 500000);
 }
 
 function normalizeImageBasePath(value) {
@@ -777,6 +827,20 @@ class Byd3DCard extends HTMLElement {
     this._config.show_external_entities = normalizeExternalEntitiesEnabled(this._config.show_external_entities);
     this._config.show_charging_cost = normalizeChargingCostEnabled(this._config.show_charging_cost);
     this._config.charging_cost_per_kwh = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh);
+    this._config.charging_cost_per_kwh_ac = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_ac);
+    this._config.charging_cost_per_kwh_dc = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_dc);
+    this._config.charging_type_default = normalizeChargingTypeDefault(this._config.charging_type_default);
+    this._config.charging_type_infer_from_power = normalizeChargingTypeInferFromPower(
+      this._config.charging_type_infer_from_power
+    );
+    this._config.charging_type_power_ac_min_w = normalizeChargingTypePowerThreshold(
+      this._config.charging_type_power_ac_min_w,
+      DEFAULT_CONFIG.charging_type_power_ac_min_w
+    );
+    this._config.charging_type_power_ac_max_w = normalizeChargingTypePowerThreshold(
+      this._config.charging_type_power_ac_max_w,
+      DEFAULT_CONFIG.charging_type_power_ac_max_w
+    );
     this._config.charging_cost_mode = normalizeChargingCostMode(this._config.charging_cost_mode);
     this._config.require_unlock_pin = normalizeUnlockPinEnabled(this._config.require_unlock_pin);
     this._config.unlock_pin_code = normalizeUnlockPinCode(this._config.unlock_pin_code);
@@ -815,6 +879,7 @@ class Byd3DCard extends HTMLElement {
     }
     if (!this._config.show_charging_cost) {
       this._chargingCostDialogOpen = false;
+      this._stopDialogsLiveLoop();
     }
     this._translations = FALLBACK_I18N;
     this._loadTranslations();
@@ -871,6 +936,7 @@ class Byd3DCard extends HTMLElement {
       "range",
       "charging",
       "charging_energy",
+      "charging_type",
       "battery_power",
       "climate",
       "ac_switch",
@@ -975,6 +1041,60 @@ class Byd3DCard extends HTMLElement {
     this._startAutoRefreshLoop();
   }
 
+  _isAnyDialogOpen() {
+    return Boolean(this._confirmation || this._locationMapDialog || this._customEntitiesDialogOpen || this._chargingCostDialogOpen);
+  }
+
+  _refreshLocationMapDialogData() {
+    if (!this._locationMapDialog) return false;
+    const coords = this._getLocationCoordinates();
+    if (!coords) {
+      if (!this._locationMapDialog.hasCoordinates) return false;
+      this._locationMapDialog = {
+        hasCoordinates: false,
+        embedUrl: "",
+        externalUrl: "",
+      };
+      return true;
+    }
+
+    const nextDialog = {
+      hasCoordinates: true,
+      embedUrl: this._buildOsmEmbedUrl(coords.lat, coords.lon),
+      externalUrl: this._buildExternalMapUrl(coords.lat, coords.lon),
+      lat: coords.lat,
+      lon: coords.lon,
+    };
+    const prev = this._locationMapDialog;
+    const unchanged =
+      prev?.hasCoordinates &&
+      Math.abs((prev.lat ?? 0) - nextDialog.lat) < 0.000001 &&
+      Math.abs((prev.lon ?? 0) - nextDialog.lon) < 0.000001;
+    if (unchanged) return false;
+    this._locationMapDialog = nextDialog;
+    return true;
+  }
+
+  _startDialogsLiveLoop() {
+    if (this._dialogsLiveTimer) return;
+    this._dialogsLiveTimer = window.setInterval(() => {
+      if (!this._isAnyDialogOpen()) {
+        this._stopDialogsLiveLoop();
+        return;
+      }
+      if (document.visibilityState !== "visible") return;
+      this._refreshStateEntities(false);
+      this._refreshLocationMapDialogData();
+      this._render();
+    }, 5000);
+  }
+
+  _stopDialogsLiveLoop() {
+    if (!this._dialogsLiveTimer) return;
+    window.clearInterval(this._dialogsLiveTimer);
+    this._dialogsLiveTimer = null;
+  }
+
   set hass(hass) {
     this._hass = hass;
     if (!this._config) return;
@@ -990,6 +1110,7 @@ class Byd3DCard extends HTMLElement {
 
   disconnectedCallback() {
     this._stopAutoRefreshLoop();
+    this._stopDialogsLiveLoop();
   }
 
   getCardSize() {
@@ -1030,6 +1151,7 @@ class Byd3DCard extends HTMLElement {
       "range",
       "charging",
       "charging_energy",
+      "charging_type",
       "battery_power",
       "cabin_temp",
       "exterior_temp",
@@ -1068,6 +1190,9 @@ class Byd3DCard extends HTMLElement {
     ];
 
     const values = keys.map((key) => this._snapshotStateValue(key));
+    if (this._isChargingStateActive(this._state("charging")?.state)) {
+      values.push(`charging-elapsed-minute:${Math.floor(Date.now() / 60000)}`);
+    }
     for (const entityId of this._customEntities()) {
       const st = this._hass?.states?.[entityId];
       if (!st) {
@@ -1327,6 +1452,27 @@ class Byd3DCard extends HTMLElement {
     return this._isTruthyState(value);
   }
 
+  _isChargingStateActive(raw) {
+    const value = String(raw || "").trim().toLowerCase();
+    if (!value) return false;
+    const inactive = new Set([
+      "off",
+      "false",
+      "0",
+      "idle",
+      "stopped",
+      "not_charging",
+      "not charging",
+      "disconnected",
+      "unknown",
+      "unavailable",
+    ]);
+    if (inactive.has(value) || value.includes("not_charg")) return false;
+    const active = new Set(["on", "true", "1", "charging", "charge", "active", "in_progress", "in progress"]);
+    if (active.has(value)) return true;
+    return value.includes("charg");
+  }
+
   _seatControlOptions(seatState) {
     const rawOptions = Array.isArray(seatState?.attributes?.options) ? seatState.attributes.options : [];
     const normalized = [];
@@ -1418,11 +1564,63 @@ class Byd3DCard extends HTMLElement {
     return normalizeChargingCostMode(this._config?.charging_cost_mode);
   }
 
+  _chargingTypeDefault() {
+    return normalizeChargingTypeDefault(this._config?.charging_type_default);
+  }
+
+  _chargingCostPerKwhByType(type) {
+    const generic = this._chargingCostPerKwh();
+    const acRate = normalizeChargingCostPerKwh(this._config?.charging_cost_per_kwh_ac);
+    const dcRate = normalizeChargingCostPerKwh(this._config?.charging_cost_per_kwh_dc);
+    if (type === "ac" && acRate > 0) return acRate;
+    if (type === "dc" && dcRate > 0) return dcRate;
+    return generic;
+  }
+
+  _chargingTypeInferFromPowerEnabled() {
+    return normalizeChargingTypeInferFromPower(this._config?.charging_type_infer_from_power);
+  }
+
+  _chargingTypePowerThresholds() {
+    const minW = normalizeChargingTypePowerThreshold(
+      this._config?.charging_type_power_ac_min_w,
+      DEFAULT_CONFIG.charging_type_power_ac_min_w
+    );
+    const maxWRaw = normalizeChargingTypePowerThreshold(
+      this._config?.charging_type_power_ac_max_w,
+      DEFAULT_CONFIG.charging_type_power_ac_max_w
+    );
+    const maxW = Math.max(maxWRaw, minW);
+    return { minW, maxW };
+  }
+
+  _chargingPowerWatts() {
+    const batteryPowerState = this._state("battery_power");
+    const value = toNumber(batteryPowerState?.state);
+    if (value === null) return null;
+    const unitRaw = String(batteryPowerState?.attributes?.unit_of_measurement || "w")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "");
+    const absValue = Math.abs(value);
+    if (["w", "watt", "watts"].includes(unitRaw)) return absValue;
+    if (["kw", "kilowatt", "kilowatts"].includes(unitRaw)) return absValue * 1000;
+    if (["mw", "megawatt", "megawatts"].includes(unitRaw)) return absValue * 1000000;
+    return absValue;
+  }
+
   _chargingCostStorageKey() {
     const prefix = this._config?.entity_prefix || "auto";
     const profile = this._config?.vehicle_profile || "default";
     const path = window?.location?.pathname || "";
     return `byd3d:charging-cost:${path}:${profile}:${prefix}`;
+  }
+
+  _chargingDurationStorageKey() {
+    const prefix = this._config?.entity_prefix || "auto";
+    const profile = this._config?.vehicle_profile || "default";
+    const path = window?.location?.pathname || "";
+    return `byd3d:charging-duration:${path}:${profile}:${prefix}`;
   }
 
   _currentMonthKey() {
@@ -1450,6 +1648,78 @@ class Byd3DCard extends HTMLElement {
     }
   }
 
+  _loadChargingDurationTracker() {
+    try {
+      const raw = window.localStorage.getItem(this._chargingDurationStorageKey());
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return null;
+      return parsed;
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  _saveChargingDurationTracker(data) {
+    try {
+      window.localStorage.setItem(this._chargingDurationStorageKey(), JSON.stringify(data));
+    } catch (_err) {
+      // no-op: storage might be blocked by browser policy
+    }
+  }
+
+  _stateTimestampMs(value) {
+    if (!value) return null;
+    const ts = Date.parse(String(value));
+    if (!Number.isFinite(ts)) return null;
+    return ts;
+  }
+
+  _normalizeChargingTypeValue(rawValue, entityId = "") {
+    const raw = String(rawValue || "").trim().toLowerCase();
+    if (!raw || raw === "unknown" || raw === "unavailable") return null;
+    const directDc = [
+      "dc",
+      "direct_current",
+      "directcurrent",
+      "fast",
+      "fast_charge",
+      "fast_charging",
+      "rapid",
+      "super_fast",
+      "ultra_fast",
+    ];
+    const directAc = [
+      "ac",
+      "alternating_current",
+      "alternatingcurrent",
+      "slow",
+      "slow_charge",
+      "slow_charging",
+      "normal",
+      "home",
+      "level1",
+      "level2",
+      "level_1",
+      "level_2",
+    ];
+    if (directDc.includes(raw)) return "dc";
+    if (directAc.includes(raw)) return "ac";
+
+    if (raw === "on" || raw === "off" || raw === "true" || raw === "false") {
+      const id = String(entityId || "").toLowerCase();
+      if (id.includes("dc")) return "dc";
+      if (id.includes("ac")) return "ac";
+      if (id.includes("fast")) return "dc";
+      if (id.includes("rapid")) return "dc";
+      if (id.includes("slow")) return "ac";
+    }
+
+    if (raw.includes("dc") || raw.includes("fast") || raw.includes("rapid")) return "dc";
+    if (raw.includes("ac") || raw.includes("slow") || raw.includes("home")) return "ac";
+    return null;
+  }
+
   _monthlyChargingEnergyKwh(sensorEnergyKwh) {
     const monthKey = this._currentMonthKey();
     const stored = this._loadChargingMonthlyTracker();
@@ -1457,8 +1727,8 @@ class Byd3DCard extends HTMLElement {
       stored && typeof stored === "object"
         ? {
             monthKey: String(stored.monthKey || ""),
-            totalKwh: Number.isFinite(Number(stored.totalKwh)) ? Number(stored.totalKwh) : 0,
-            lastEnergyKwh: Number.isFinite(Number(stored.lastEnergyKwh)) ? Number(stored.lastEnergyKwh) : null,
+            totalKwh: toFiniteNumberOrNull(stored.totalKwh) ?? 0,
+            lastEnergyKwh: toFiniteNumberOrNull(stored.lastEnergyKwh),
           }
         : { monthKey, totalKwh: 0, lastEnergyKwh: null };
 
@@ -1534,21 +1804,160 @@ class Byd3DCard extends HTMLElement {
     return converted;
   }
 
-  _chargingCostData() {
+  _chargingTypeData() {
+    const typeState = this._state("charging_type");
+    const entityId = this._resolveEntity("charging_type") || "";
+    let detected =
+      this._normalizeChargingTypeValue(typeState?.state, entityId) ||
+      this._normalizeChargingTypeValue(typeState?.attributes?.charging_type, entityId) ||
+      this._normalizeChargingTypeValue(typeState?.attributes?.charge_type, entityId) ||
+      this._normalizeChargingTypeValue(typeState?.attributes?.charger_type, entityId) ||
+      this._normalizeChargingTypeValue(typeState?.attributes?.charging_mode, entityId) ||
+      this._normalizeChargingTypeValue(typeState?.attributes?.mode, entityId);
+    let source = typeState && detected ? "sensor" : "";
+
+    if (!detected && this._chargingTypeInferFromPowerEnabled() && this._isChargingStateActive(this._state("charging")?.state)) {
+      const powerW = this._chargingPowerWatts();
+      const { minW, maxW } = this._chargingTypePowerThresholds();
+      if (Number.isFinite(powerW)) {
+        if (powerW > maxW) {
+          detected = "dc";
+          source = "power";
+        } else if (powerW >= minW && powerW <= maxW) {
+          detected = "ac";
+          source = "power";
+        }
+      }
+    }
+
+    if (!detected) detected = this._chargingTypeDefault();
+    if (!source) source = "default";
+
+    return {
+      type: detected,
+      label: detected === "dc" ? "DC" : "AC",
+      source,
+    };
+  }
+
+  _estimatedEnergyFromPowerKwh(durationData) {
+    const isChargingNow = this._isChargingStateActive(this._state("charging")?.state);
+    if (!isChargingNow) return null;
+    if (!durationData?.isCharging) return null;
+    const powerW = this._chargingPowerWatts();
+    if (!Number.isFinite(powerW) || powerW <= 0) return null;
+    const durationSeconds = toFiniteNumberOrNull(durationData?.durationSeconds);
+    if (!Number.isFinite(durationSeconds) || durationSeconds < 0) return null;
+    return (powerW / 1000) * (durationSeconds / 3600);
+  }
+
+  _chargingCostData(durationData = null) {
     const rawEnergyKwh = this._chargingEnergyKwh();
     const mode = this._chargingCostMode();
     const monthly = this._monthlyChargingEnergyKwh(rawEnergyKwh);
-    const energyKwh = mode === "monthly" ? monthly.totalKwh : rawEnergyKwh;
-    const rate = this._chargingCostPerKwh();
+    const duration = durationData || this._chargingDurationData();
+    const powerEstimatedKwh = this._estimatedEnergyFromPowerKwh(duration);
+    const hasSensorEnergy = Number.isFinite(rawEnergyKwh);
+    const monthlyEnergyKwh = Number.isFinite(monthly?.totalKwh) ? monthly.totalKwh : null;
+    let energyKwh = null;
+    let energySource = "none";
+    if (mode === "monthly" && hasSensorEnergy) {
+      energyKwh = monthlyEnergyKwh;
+      energySource = "sensor_monthly";
+    } else if (mode !== "monthly" && hasSensorEnergy) {
+      energyKwh = rawEnergyKwh;
+      energySource = "sensor";
+    } else if (Number.isFinite(powerEstimatedKwh)) {
+      energyKwh = powerEstimatedKwh;
+      energySource = "power_estimate";
+    }
+    const chargingType = this._chargingTypeData();
+    const rate = this._chargingCostPerKwhByType(chargingType.type);
     const hasEnergy = Number.isFinite(energyKwh);
     return {
       energyKwh: hasEnergy ? energyKwh : null,
       ratePerKwh: rate,
       totalCost: hasEnergy ? energyKwh * rate : null,
       hasEnergy,
+      chargingType: chargingType.type,
+      chargingTypeLabel: chargingType.label,
+      chargingTypeSource: chargingType.source,
+      energySource,
       mode,
       monthKey: monthly.monthKey,
     };
+  }
+
+  _chargingDurationData() {
+    const chargingState = this._state("charging");
+    const isCharging = this._isChargingStateActive(chargingState?.state);
+    const nowMs = Date.now();
+    const lastChangedMs = this._stateTimestampMs(chargingState?.last_changed);
+    const stored = this._loadChargingDurationTracker();
+    const tracker =
+      stored && typeof stored === "object"
+        ? {
+            activeStartMs: toFiniteNumberOrNull(stored.activeStartMs),
+            lastDurationSec: toFiniteNumberOrNull(stored.lastDurationSec),
+            lastKnownState: String(stored.lastKnownState || ""),
+          }
+        : { activeStartMs: null, lastDurationSec: null, lastKnownState: "" };
+
+    let changed = false;
+    if (tracker.activeStartMs !== null && tracker.activeStartMs < 946684800000) {
+      tracker.activeStartMs = null;
+      changed = true;
+    }
+    if (tracker.lastDurationSec !== null && tracker.lastDurationSec > 2678400) {
+      tracker.lastDurationSec = null;
+      changed = true;
+    }
+
+    if (isCharging) {
+      if (tracker.activeStartMs === null) {
+        tracker.activeStartMs = Number.isFinite(lastChangedMs) ? lastChangedMs : nowMs;
+        changed = true;
+      } else if (tracker.activeStartMs > nowMs) {
+        tracker.activeStartMs = nowMs;
+        changed = true;
+      }
+      if (tracker.lastKnownState !== "on") {
+        tracker.lastKnownState = "on";
+        changed = true;
+      }
+      if (changed) this._saveChargingDurationTracker(tracker);
+      const durationSeconds = Math.max(0, Math.floor((nowMs - tracker.activeStartMs) / 1000));
+      return { durationSeconds, hasDuration: true, isCharging: true };
+    }
+
+    if (tracker.activeStartMs !== null) {
+      const endMs = Number.isFinite(lastChangedMs) ? Math.max(lastChangedMs, tracker.activeStartMs) : nowMs;
+      tracker.lastDurationSec = Math.max(0, Math.floor((endMs - tracker.activeStartMs) / 1000));
+      tracker.activeStartMs = null;
+      changed = true;
+    }
+    if (tracker.lastKnownState !== "off") {
+      tracker.lastKnownState = "off";
+      changed = true;
+    }
+    if (changed) this._saveChargingDurationTracker(tracker);
+    return {
+      durationSeconds: Number.isFinite(tracker.lastDurationSec) ? tracker.lastDurationSec : null,
+      hasDuration: Number.isFinite(tracker.lastDurationSec),
+      isCharging: false,
+    };
+  }
+
+  _formatDurationLabel(totalSeconds) {
+    if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return "-";
+    const seconds = Math.floor(totalSeconds);
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    if (hours > 0) {
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+    }
+    return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
   }
 
   _isUnlockPinRequired() {
@@ -1643,11 +2052,13 @@ class Byd3DCard extends HTMLElement {
 
   _showConfirmation(type, payload = {}) {
     this._confirmation = { type, pinValue: "", pinError: "", ...payload };
+    this._startDialogsLiveLoop();
     this._render();
   }
 
   _hideConfirmation() {
     this._confirmation = null;
+    if (!this._isAnyDialogOpen()) this._stopDialogsLiveLoop();
     this._render();
   }
 
@@ -1863,24 +2274,28 @@ class Byd3DCard extends HTMLElement {
   _showCustomEntitiesDialog() {
     if (!this._customEntities().length) return;
     this._customEntitiesDialogOpen = true;
+    this._startDialogsLiveLoop();
     this._render();
   }
 
   _hideCustomEntitiesDialog() {
     if (!this._customEntitiesDialogOpen) return;
     this._customEntitiesDialogOpen = false;
+    if (!this._isAnyDialogOpen()) this._stopDialogsLiveLoop();
     this._render();
   }
 
   _showChargingCostDialog() {
     if (!this._isChargingCostVisible()) return;
     this._chargingCostDialogOpen = true;
+    this._startDialogsLiveLoop();
     this._render();
   }
 
   _hideChargingCostDialog() {
     if (!this._chargingCostDialogOpen) return;
     this._chargingCostDialogOpen = false;
+    if (!this._isAnyDialogOpen()) this._stopDialogsLiveLoop();
     this._render();
   }
 
@@ -1944,30 +2359,23 @@ class Byd3DCard extends HTMLElement {
   }
 
   _showLocationMapDialog() {
-    const coords = this._getLocationCoordinates();
     this._confirmation = null;
-    if (!coords) {
+    if (!this._locationMapDialog) {
       this._locationMapDialog = {
         hasCoordinates: false,
         embedUrl: "",
         externalUrl: "",
       };
-      this._render();
-      return;
     }
-    this._locationMapDialog = {
-      hasCoordinates: true,
-      embedUrl: this._buildOsmEmbedUrl(coords.lat, coords.lon),
-      externalUrl: this._buildExternalMapUrl(coords.lat, coords.lon),
-      lat: coords.lat,
-      lon: coords.lon,
-    };
+    this._refreshLocationMapDialogData();
+    this._startDialogsLiveLoop();
     this._render();
   }
 
   _hideLocationMapDialog() {
     if (!this._locationMapDialog) return;
     this._locationMapDialog = null;
+    if (!this._isAnyDialogOpen()) this._stopDialogsLiveLoop();
     this._render();
   }
 
@@ -2214,7 +2622,7 @@ class Byd3DCard extends HTMLElement {
     const fuel = toNumber(fuelState?.state);
     const fuelPercent = Number.isFinite(fuel) ? clamp(fuel, 0, 100) : null;
     const range = toNumber(rangeState?.state);
-    const isCharging = chargingState?.state === "on";
+    const isCharging = this._isChargingStateActive(chargingState?.state);
     const lowBattery = battery < 20;
     const powerRaw = batteryPowerState?.state;
     const powerNumeric = toNumber(powerRaw);
@@ -2370,15 +2778,20 @@ class Byd3DCard extends HTMLElement {
     if (lockState?.state === "unlocked") {
       pushIndicator("lock_open", "mdi:lock-open-variant-outline", this._t("lock"), "warn", canToggleLock);
     }
-    if (chargingState?.state === "on") {
+    if (this._isChargingStateActive(chargingState?.state)) {
       pushIndicator("charging", "mdi:ev-station", this._t("charging"), "cold");
     }
     const visibleServiceIndicators = serviceIndicators.slice(0, 3);
     const customEntities = this._customEntities();
-    const chargingCostData = this._chargingCostData();
-    const chargingCostRateLabel = this._chargingCostPerKwh().toFixed(2);
+    const chargingDurationData = this._chargingDurationData();
+    const chargingCostData = this._chargingCostData(chargingDurationData);
+    const chargingCostRateLabel = chargingCostData.ratePerKwh.toFixed(2);
     const chargingCostEnergyLabel = chargingCostData.hasEnergy ? `${chargingCostData.energyKwh.toFixed(2)} kWh` : "-";
     const chargingCostTotalLabel = chargingCostData.hasEnergy ? chargingCostData.totalCost.toFixed(2) : "-";
+    const chargingTypeLabel = chargingCostData.chargingTypeLabel || "-";
+    const chargingDurationLabel = chargingDurationData.hasDuration
+      ? this._formatDurationLabel(chargingDurationData.durationSeconds)
+      : "-";
     const chargingCostPeriodLabel =
       chargingCostData.mode === "monthly"
         ? this._formatChargingPeriodLabel(chargingCostData.monthKey)
@@ -2766,8 +3179,16 @@ class Byd3DCard extends HTMLElement {
                   <span class="charging-cost-item-value">${chargingCostPeriodLabel}</span>
                 </div>
                 <div class="charging-cost-item">
+                  <span class="charging-cost-item-label">${this._t("charging_type_value")}</span>
+                  <span class="charging-cost-item-value">${chargingTypeLabel}</span>
+                </div>
+                <div class="charging-cost-item">
                   <span class="charging-cost-item-label">${this._t("charging_consumption_value")}</span>
                   <span class="charging-cost-item-value">${chargingCostEnergyLabel}</span>
+                </div>
+                <div class="charging-cost-item">
+                  <span class="charging-cost-item-label">${this._t("charging_duration_value")}</span>
+                  <span class="charging-cost-item-value">${chargingDurationLabel}</span>
                 </div>
                 <div class="charging-cost-item">
                   <span class="charging-cost-item-label">${this._t("charging_rate_value")}</span>
@@ -4751,6 +5172,20 @@ class Byd3DCardEditor extends HTMLElement {
     this._config.show_external_entities = normalizeExternalEntitiesEnabled(this._config.show_external_entities);
     this._config.show_charging_cost = normalizeChargingCostEnabled(this._config.show_charging_cost);
     this._config.charging_cost_per_kwh = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh);
+    this._config.charging_cost_per_kwh_ac = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_ac);
+    this._config.charging_cost_per_kwh_dc = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_dc);
+    this._config.charging_type_default = normalizeChargingTypeDefault(this._config.charging_type_default);
+    this._config.charging_type_infer_from_power = normalizeChargingTypeInferFromPower(
+      this._config.charging_type_infer_from_power
+    );
+    this._config.charging_type_power_ac_min_w = normalizeChargingTypePowerThreshold(
+      this._config.charging_type_power_ac_min_w,
+      DEFAULT_CONFIG.charging_type_power_ac_min_w
+    );
+    this._config.charging_type_power_ac_max_w = normalizeChargingTypePowerThreshold(
+      this._config.charging_type_power_ac_max_w,
+      DEFAULT_CONFIG.charging_type_power_ac_max_w
+    );
     this._config.charging_cost_mode = normalizeChargingCostMode(this._config.charging_cost_mode);
     this._config.require_unlock_pin = normalizeUnlockPinEnabled(this._config.require_unlock_pin);
     this._config.unlock_pin_code = normalizeUnlockPinCode(this._config.unlock_pin_code);
@@ -5352,6 +5787,20 @@ class Byd3DCardEditor extends HTMLElement {
     this._config = { ...this._config, ...partial };
     this._config.show_charging_cost = normalizeChargingCostEnabled(this._config.show_charging_cost);
     this._config.charging_cost_per_kwh = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh);
+    this._config.charging_cost_per_kwh_ac = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_ac);
+    this._config.charging_cost_per_kwh_dc = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_dc);
+    this._config.charging_type_default = normalizeChargingTypeDefault(this._config.charging_type_default);
+    this._config.charging_type_infer_from_power = normalizeChargingTypeInferFromPower(
+      this._config.charging_type_infer_from_power
+    );
+    this._config.charging_type_power_ac_min_w = normalizeChargingTypePowerThreshold(
+      this._config.charging_type_power_ac_min_w,
+      DEFAULT_CONFIG.charging_type_power_ac_min_w
+    );
+    this._config.charging_type_power_ac_max_w = normalizeChargingTypePowerThreshold(
+      this._config.charging_type_power_ac_max_w,
+      DEFAULT_CONFIG.charging_type_power_ac_max_w
+    );
     this._config.charging_cost_mode = normalizeChargingCostMode(this._config.charging_cost_mode);
     this._config.custom_entities = normalizeCustomEntities(this._config.custom_entities);
     this._config.custom_entity_names = pruneCustomEntityNames(
@@ -5549,6 +5998,58 @@ class Byd3DCardEditor extends HTMLElement {
                   value="${normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh)}"
                 />
                 <small>${this._t("settings_charging_cost_per_kwh_hint")}</small>
+              </div>
+              <div class="field">
+                <label>${this._t("settings_charging_cost_per_kwh_ac")}</label>
+                <input
+                  id="charging_cost_per_kwh_ac"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  step="0.01"
+                  value="${normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_ac)}"
+                />
+              </div>
+              <div class="field">
+                <label>${this._t("settings_charging_cost_per_kwh_dc")}</label>
+                <input
+                  id="charging_cost_per_kwh_dc"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  step="0.01"
+                  value="${normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_dc)}"
+                />
+              </div>
+              <div class="field">
+                <label>${this._t("settings_charging_type_default")}</label>
+                <select id="charging_type_default">
+                  <option value="ac" ${normalizeChargingTypeDefault(this._config.charging_type_default) === "ac" ? "selected" : ""}>${this._t("charging_type_default_ac")}</option>
+                  <option value="dc" ${normalizeChargingTypeDefault(this._config.charging_type_default) === "dc" ? "selected" : ""}>${this._t("charging_type_default_dc")}</option>
+                </select>
+              </div>
+              <label class="toggle-chip"><input id="charging_type_infer_from_power" type="checkbox" ${normalizeChargingTypeInferFromPower(this._config.charging_type_infer_from_power) ? "checked" : ""}/> <span>${this._t("settings_charging_type_infer_from_power")}</span></label>
+              <div class="field">
+                <label>${this._t("settings_charging_type_power_ac_min_w")}</label>
+                <input
+                  id="charging_type_power_ac_min_w"
+                  type="number"
+                  min="0"
+                  max="500000"
+                  step="100"
+                  value="${normalizeChargingTypePowerThreshold(this._config.charging_type_power_ac_min_w, DEFAULT_CONFIG.charging_type_power_ac_min_w)}"
+                />
+              </div>
+              <div class="field">
+                <label>${this._t("settings_charging_type_power_ac_max_w")}</label>
+                <input
+                  id="charging_type_power_ac_max_w"
+                  type="number"
+                  min="0"
+                  max="500000"
+                  step="100"
+                  value="${normalizeChargingTypePowerThreshold(this._config.charging_type_power_ac_max_w, DEFAULT_CONFIG.charging_type_power_ac_max_w)}"
+                />
               </div>
               <div class="field">
                 <label>${this._t("settings_charging_cost_mode")}</label>
@@ -6299,6 +6800,26 @@ class Byd3DCardEditor extends HTMLElement {
         show_location: this.shadowRoot.getElementById("show_location").checked,
         show_charging_cost: normalizeChargingCostEnabled(this.shadowRoot.getElementById("show_charging_cost")?.checked),
         charging_cost_per_kwh: normalizeChargingCostPerKwh(this.shadowRoot.getElementById("charging_cost_per_kwh")?.value),
+        charging_cost_per_kwh_ac: normalizeChargingCostPerKwh(
+          this.shadowRoot.getElementById("charging_cost_per_kwh_ac")?.value
+        ),
+        charging_cost_per_kwh_dc: normalizeChargingCostPerKwh(
+          this.shadowRoot.getElementById("charging_cost_per_kwh_dc")?.value
+        ),
+        charging_type_default: normalizeChargingTypeDefault(
+          this.shadowRoot.getElementById("charging_type_default")?.value
+        ),
+        charging_type_infer_from_power: normalizeChargingTypeInferFromPower(
+          this.shadowRoot.getElementById("charging_type_infer_from_power")?.checked
+        ),
+        charging_type_power_ac_min_w: normalizeChargingTypePowerThreshold(
+          this.shadowRoot.getElementById("charging_type_power_ac_min_w")?.value,
+          DEFAULT_CONFIG.charging_type_power_ac_min_w
+        ),
+        charging_type_power_ac_max_w: normalizeChargingTypePowerThreshold(
+          this.shadowRoot.getElementById("charging_type_power_ac_max_w")?.value,
+          DEFAULT_CONFIG.charging_type_power_ac_max_w
+        ),
         charging_cost_mode: normalizeChargingCostMode(this.shadowRoot.getElementById("charging_cost_mode")?.value),
         require_unlock_pin: normalizeUnlockPinEnabled(this.shadowRoot.getElementById("require_unlock_pin")?.checked),
         unlock_pin_code: normalizeUnlockPinCode(this.shadowRoot.getElementById("unlock_pin_code")?.value),
@@ -6346,6 +6867,12 @@ class Byd3DCardEditor extends HTMLElement {
     bindChange("show_location");
     bindChange("show_charging_cost");
     bindChange("charging_cost_per_kwh");
+    bindChange("charging_cost_per_kwh_ac");
+    bindChange("charging_cost_per_kwh_dc");
+    bindChange("charging_type_default");
+    bindChange("charging_type_infer_from_power");
+    bindChange("charging_type_power_ac_min_w");
+    bindChange("charging_type_power_ac_max_w");
     bindChange("charging_cost_mode");
     bindChange("require_unlock_pin");
     bindChange("unlock_pin_code");

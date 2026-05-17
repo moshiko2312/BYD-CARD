@@ -166,5 +166,14 @@
   "settings_refresh_interval_hint": "Fréquence de mise à jour depuis le serveur (recommandé 20-30)",
   "settings_category_order": "Ordre des catégories",
   "settings_category_order_hint": "Glissez-déposez pour réorganiser les boutons de catégories",
-  "settings_show_seat_cooling": "Afficher le refroidissement des sièges"
+  "settings_show_seat_cooling": "Afficher le refroidissement des sièges",
+  "settings_charging_cost_per_kwh_ac": "Coût AC par kWh",
+  "settings_charging_cost_per_kwh_dc": "Coût DC par kWh",
+  "settings_charging_type_default": "Type de charge par défaut",
+  "charging_type_default_ac": "AC (lente)",
+  "charging_type_default_dc": "DC (rapide)",
+  "charging_type_value": "Type de charge",
+  "settings_charging_type_infer_from_power": "Déduire AC/DC selon la puissance de charge",
+  "settings_charging_type_power_ac_min_w": "Seuil bas de charge normale (W)",
+  "settings_charging_type_power_ac_max_w": "Seuil haut de charge normale (W)"
 }

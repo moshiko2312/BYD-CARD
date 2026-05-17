@@ -175,5 +175,14 @@
   "settings_category_order": "סדר קטגוריות",
   "settings_category_order_hint": "גרור ושחרר כדי לשנות את הסדר בכפתורי הקטגוריות",
   "settings_show_seat_cooling": "הצג קירור מושבים",
-  "executed": "בוצע"
+  "executed": "בוצע",
+  "settings_charging_cost_per_kwh_ac": "מחיר לקוט״ש בטעינת AC",
+  "settings_charging_cost_per_kwh_dc": "מחיר לקוט״ש בטעינת DC",
+  "settings_charging_type_default": "סוג טעינה כברירת מחדל",
+  "charging_type_default_ac": "AC (איטית)",
+  "charging_type_default_dc": "DC (מהירה)",
+  "charging_type_value": "סוג טעינה",
+  "settings_charging_type_infer_from_power": "זיהוי AC/DC לפי הספק טעינה",
+  "settings_charging_type_power_ac_min_w": "סף תחתון לטעינה רגילה (W)",
+  "settings_charging_type_power_ac_max_w": "סף עליון לטעינה רגילה (W)"
 }

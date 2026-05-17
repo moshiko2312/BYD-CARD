@@ -175,5 +175,14 @@
   "settings_refresh_interval_hint": "How often to refresh status from server (recommended 20-30)",
   "settings_category_order": "Category order",
   "settings_category_order_hint": "Drag and drop to reorder category buttons",
-  "settings_show_seat_cooling": "Show seat cooling"
+  "settings_show_seat_cooling": "Show seat cooling",
+  "settings_charging_cost_per_kwh_ac": "AC cost per kWh",
+  "settings_charging_cost_per_kwh_dc": "DC cost per kWh",
+  "settings_charging_type_default": "Default charging type",
+  "charging_type_default_ac": "AC (slow)",
+  "charging_type_default_dc": "DC (fast)",
+  "charging_type_value": "Charging type",
+  "settings_charging_type_infer_from_power": "Infer AC/DC from charging power",
+  "settings_charging_type_power_ac_min_w": "Normal charging lower threshold (W)",
+  "settings_charging_type_power_ac_max_w": "Normal charging upper threshold (W)"
 }
