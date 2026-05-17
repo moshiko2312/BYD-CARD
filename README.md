@@ -17,7 +17,7 @@ Recommended order:
 ## Features
 
 - 3D hero layout for vehicle image and battery status
-- Vehicle profiles: `ATTO 3`, `SEAL`, `DOLPHIN`, `SEALION 7`, `ATTO 2`, `DOLPHIN SURF`, `TANG`
+- Vehicle profiles: `ATTO 3`, `SEAL`, `DOLPHIN`, `SEALION 7`, `ATTO 2`, `SEAL 5`, `DOLPHIN SURF`, `TANG`
 - Auto entity mapping via `entity_prefix`
 - Category tabs (radio style):
   - `Summary`
@@ -36,6 +36,10 @@ Recommended order:
 - Charging consumption mode selector:
   - `monthly` (internal monthly tracking)
   - `sensor` (direct current sensor value)
+- Hybrid profile support (`SEAL 5`, `TANG`):
+  - Hero hybrid strip (`fuel %`, `battery %`, `range km`)
+  - Summary hybrid cards + fuel-vs-battery comparison bars
+  - Uses BYD integration sensor naming (`elec_percent`, `oil_percent`, `oil_endurance`)
 
 ## Install
 
@@ -73,7 +77,7 @@ Check these quickly:
    - Manual install: `/config/www/byd-card/byd-3d-card.js`
    - HACS install: `/config/www/community/<repository-name>/byd-3d-card-hacs.js`
 4. If browser/app cache is stale, add a version query:
-   - `/hacsfiles/<repository-name>/byd-3d-card-hacs.js?v=1.0.14`
+   - `/hacsfiles/<repository-name>/byd-3d-card-hacs.js?v=1.0.15`
 5. Then hard refresh the browser/app again.
 
 ## Basic YAML
@@ -135,6 +139,21 @@ Charging cost options:
   - `monthly`: tracks monthly consumed charging energy internally and resets at a new month.
   - `sensor`: uses current charging-energy sensor value directly.
 
+Hybrid behavior:
+- Hybrid strip and hybrid summary comparison are shown only for hybrid profiles (`seal5`, `tang`).
+- The card prefers sensor mapping used by `jkaberg/hass-byd-vehicle`:
+  - battery: `sensor.<prefix>_elec_percent`
+  - fuel: `sensor.<prefix>_oil_percent`
+  - fuel range fallback: `sensor.<prefix>_oil_endurance`
+- If your entities differ, you can override manually in YAML:
+
+```yaml
+entities:
+  battery: sensor.byd_seal_5_elec_percent
+  fuel: sensor.byd_seal_5_oil_percent
+  fuel_range: sensor.byd_seal_5_oil_endurance
+```
+
 ## How to enable unlock PIN (step by step)
 
 1. Open dashboard edit mode and click card `Edit`.
@@ -177,6 +196,7 @@ unlock_pin_code: "1234"
 - `pic/seal.png` - BYD SEAL source profile image
 - `pic/sealion.png` - BYD SEALION 7 source profile image
 - `pic/byd_seal.png` - resized SEAL variant (450x273)
+- `pic/byd_seal.png` - SEAL / SEAL 5 profile image
 - `pic/byd_sealion7.png` - resized SEALION 7 variant (450x273)
 - `pic/ATTO2.png` - BYD ATTO 2 profile image
 - `pic/dolphin_surf.png` - BYD DOLPHIN SURF profile image

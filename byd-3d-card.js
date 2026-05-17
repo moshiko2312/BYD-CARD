@@ -4,7 +4,7 @@
 
 const CARD_TYPE = "byd-3d-card";
 const CARD_NAME = "BYD 3D Card";
-const CARD_VERSION = "1.0.14";
+const CARD_VERSION = "1.0.15";
 const DEFAULT_ASSET_BASE_PATH = (() => {
   try {
     const base = new URL(".", import.meta.url).pathname;
@@ -151,6 +151,11 @@ const VEHICLE_PROFILES = {
     image: PROFILE_IMAGES.atto3,
     icon: "mdi:car-electric",
   },
+  seal5: {
+    label: "BYD SEAL 5",
+    image: PROFILE_IMAGES.seal,
+    icon: "mdi:car-sports",
+  },
   dolphin_surf: {
     label: "BYD DOLPHIN SURF",
     image: PROFILE_IMAGES.dolphin,
@@ -169,12 +174,23 @@ const PROFILE_DEFAULTS = {
   dolphin: { title: "BYD DOLPHIN", entity_prefix: "byd_dolphin" },
   sealion7: { title: "BYD SEALION 7", entity_prefix: "byd_sealion_7" },
   atto2: { title: "BYD ATTO 2", entity_prefix: "byd_atto_2" },
+  seal5: { title: "BYD SEAL 5", entity_prefix: "byd_seal_5" },
   dolphin_surf: { title: "BYD DOLPHIN SURF", entity_prefix: "byd_dolphin_surf" },
   tang: { title: "BYD TANG", entity_prefix: "byd_tang" },
 };
 
+const HYBRID_PROFILE_KEYS = new Set(["tang", "seal5"]);
+
 const ENTITY_HINTS = {
-  battery: { domains: ["sensor"], suffixes: ["battery_level", "elec_percent"] },
+  battery: { domains: ["sensor"], suffixes: ["elec_percent", "battery_level"] },
+  fuel: {
+    domains: ["sensor"],
+    suffixes: ["oil_percent", "oil_percentage", "fuel_level", "fuel_percent", "fuel_percentage", "oil_level"],
+  },
+  fuel_range: {
+    domains: ["sensor"],
+    suffixes: ["oil_endurance", "fuel_endurance", "fuel_range"],
+  },
   range: { domains: ["sensor"], suffixes: ["range", "endurance_mileage", "endurance_mileage_v2"] },
   charging: { domains: ["binary_sensor"], suffixes: ["charging", "is_charging"] },
   charging_energy: {
@@ -344,6 +360,7 @@ const FALLBACK_I18N = {
   locked: "נעול",
   unlocked: "פתוח",
   battery: "סוללה",
+  fuel: "דלק",
   battery_status: "סטטוס סוללה",
   charging: "בטעינה",
   not_charging: "לא בטעינה",
@@ -849,6 +866,8 @@ class Byd3DCard extends HTMLElement {
     if (!this._config) return [];
     const logicalKeys = [
       "battery",
+      "fuel",
+      "fuel_range",
       "range",
       "charging",
       "charging_energy",
@@ -1006,6 +1025,8 @@ class Byd3DCard extends HTMLElement {
     if (!this._hass || !this._config) return "no-data";
     const keys = [
       "battery",
+      "fuel",
+      "fuel_range",
       "range",
       "charging",
       "charging_energy",
@@ -1079,6 +1100,11 @@ class Byd3DCard extends HTMLElement {
     return this._seatPassengerMode() === "cool" || this._seatPassengerMode() === "both";
   }
 
+  _isHybridProfile() {
+    const profileKey = String(this._config?.vehicle_profile || "").trim().toLowerCase();
+    return HYBRID_PROFILE_KEYS.has(profileKey);
+  }
+
   _resolveEntity(logicalKey) {
     const override = this._config.entities?.[logicalKey];
     if (override) return override;
@@ -1138,6 +1164,7 @@ class Byd3DCard extends HTMLElement {
       dolphin: `${basePath}/byd_dolphin.png`,
       sealion7: `${basePath}/sealion.png`,
       atto2: `${basePath}/ATTO2.png`,
+      seal5: `${basePath}/byd_seal.png`,
       dolphin_surf: `${basePath}/dolphin_surf.png`,
       tang: `${basePath}/TANG.png`,
     };
@@ -2095,6 +2122,8 @@ class Byd3DCard extends HTMLElement {
     const imageUrl = this._config.image_url || this._profileImage(this._config.vehicle_profile) || profile.image;
 
     const batteryState = this._state("battery");
+    const fuelState = this._state("fuel");
+    const fuelRangeState = this._state("fuel_range");
     const rangeState = this._state("range");
     const chargingState = this._state("charging");
     const batteryPowerState = this._state("battery_power");
@@ -2181,8 +2210,14 @@ class Byd3DCard extends HTMLElement {
     const seatHeatActive = seatHeatStates.some((v) => this._isSeatHeatActive(v));
     const seatHasCooling = this._isSeatCoolingEnabled() && seatHeatStates.some((v) => this._isSeatCoolingOption(v));
 
-    const battery = clamp(toNumber(batteryState?.state) ?? 0, 0, 100);
+    const batteryRaw = toNumber(batteryState?.state);
+    const battery = clamp(batteryRaw ?? 0, 0, 100);
+    const batteryPercentHybrid = batteryRaw === null ? null : clamp(batteryRaw, 0, 100);
+    const fuel = toNumber(fuelState?.state);
+    const fuelPercent = Number.isFinite(fuel) ? clamp(fuel, 0, 100) : null;
     const range = toNumber(rangeState?.state);
+    const fuelRange = toNumber(fuelRangeState?.state);
+    const hybridRange = Number.isFinite(range) ? range : fuelRange;
     const isCharging = chargingState?.state === "on";
     const lowBattery = battery < 20;
     const powerRaw = batteryPowerState?.state;
@@ -2358,6 +2393,17 @@ class Byd3DCard extends HTMLElement {
         <span class="hero-battery-value">${battery.toFixed(0)}%</span>
       </div>
     `;
+    const heroHybridOverlay = this._isHybridProfile() && fuelPercent !== null && batteryPercentHybrid !== null
+      ? `
+        <div class="hero-hybrid-strip">
+          <span class="hero-hybrid-value">${fuelPercent.toFixed(0)}%</span>
+          <ha-icon icon="mdi:water-outline" title="${this._t("fuel")}"></ha-icon>
+          <span class="hero-hybrid-value">${batteryPercentHybrid.toFixed(0)}%</span>
+          <ha-icon icon="mdi:flash-outline" title="${this._t("battery")}"></ha-icon>
+          <span class="hero-hybrid-range">${hybridRange === null ? "-" : hybridRange.toFixed(0)} ${this._t("range_km")}</span>
+        </div>
+      `
+      : "";
     const heroLockBadge = lockState
       ? `
         <div class="hero-lock-badge actionable ${lockState.state === "unlocked" || lockState.state === "on" ? "warn" : "ok"}" title="${this._boolLabel(lockState.state)}" data-key="lock">
@@ -2407,6 +2453,35 @@ class Byd3DCard extends HTMLElement {
         ${this._metric(this._t("odometer"), `${odoState?.state ?? "-"} ${this._t("odometer_km")}`)}
       </div>
     `;
+    const hybridSummaryMetrics =
+      this._isHybridProfile() && fuelPercent !== null && batteryPercentHybrid !== null
+        ? `
+      <div class="hybrid-summary-grid">
+        <div class="hybrid-summary-item tone-fuel">
+          <div class="hybrid-summary-label"><ha-icon icon="mdi:water-outline"></ha-icon><span>${this._t("fuel")}</span></div>
+          <div class="hybrid-summary-value">${fuelPercent.toFixed(0)}%</div>
+        </div>
+        <div class="hybrid-summary-item tone-battery">
+          <div class="hybrid-summary-label"><ha-icon icon="mdi:flash-outline"></ha-icon><span>${this._t("battery")}</span></div>
+          <div class="hybrid-summary-value">${batteryPercentHybrid.toFixed(0)}%</div>
+        </div>
+        <div class="hybrid-summary-item tone-range">
+          <div class="hybrid-summary-label"><ha-icon icon="mdi:map-marker-distance"></ha-icon><span>${this._t("range_km")}</span></div>
+          <div class="hybrid-summary-value">${hybridRange === null ? "-" : hybridRange.toFixed(0)}</div>
+        </div>
+      </div>
+      <div class="hybrid-compare">
+        <div class="hybrid-compare-row">
+          <div class="hybrid-compare-head"><ha-icon icon="mdi:water-outline"></ha-icon><span>${this._t("fuel")}</span><strong>${fuelPercent.toFixed(0)}%</strong></div>
+          <div class="hybrid-compare-track"><span class="hybrid-compare-fill fuel" style="width:${fuelPercent.toFixed(0)}%"></span></div>
+        </div>
+        <div class="hybrid-compare-row">
+          <div class="hybrid-compare-head"><ha-icon icon="mdi:flash-outline"></ha-icon><span>${this._t("battery")}</span><strong>${batteryPercentHybrid.toFixed(0)}%</strong></div>
+          <div class="hybrid-compare-track"><span class="hybrid-compare-fill battery" style="width:${batteryPercentHybrid.toFixed(0)}%"></span></div>
+        </div>
+      </div>
+      `
+        : "";
 
     const summaryCategory = this._category(
       this._t("category_summary"),
@@ -2427,6 +2502,7 @@ class Byd3DCard extends HTMLElement {
         </div>
         ${isCharging ? `<div class="battery-sub"><span class="charge-state">${this._t("charging")}</span></div>` : ""}
       </div>
+      ${hybridSummaryMetrics}
       ${summaryMetrics}
       `,
       { titleClass: "category-title-main", icon: "mdi:car-electric" }
@@ -2731,6 +2807,7 @@ class Byd3DCard extends HTMLElement {
             <img class="car-image" src="${imageUrl}" data-fallback="${profile.image}" alt="${profile.label}" />
             <div class="hero-overlay">
               ${heroBatteryOverlay}
+              ${heroHybridOverlay}
               ${serviceOverlay}
               ${heroCustomBadge}
               ${heroChargingCostBadge}
@@ -2874,6 +2951,45 @@ class Byd3DCard extends HTMLElement {
           line-height: 1;
           color: #f4fbff;
           text-shadow: 0 0 8px rgba(121,219,255,.36);
+        }
+        .hero-hybrid-strip {
+          position: absolute;
+          top: 12px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 5px 9px;
+          border-radius: 11px;
+          border: 1px solid rgba(162, 196, 228, .34);
+          background: linear-gradient(180deg, rgba(11,20,31,.7), rgba(10,17,26,.82));
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+          direction: ltr;
+          unicode-bidi: plaintext;
+          max-width: calc(100% - 180px);
+          white-space: nowrap;
+        }
+        .hero-hybrid-strip ha-icon {
+          width: 16px;
+          height: 16px;
+          --mdc-icon-size: 16px;
+          color: rgba(226,243,255,.88);
+        }
+        .hero-hybrid-value {
+          font-size: 15px;
+          font-weight: 900;
+          color: #f3fbff;
+          line-height: 1;
+          font-variant-numeric: tabular-nums;
+        }
+        .hero-hybrid-range {
+          font-size: 19px;
+          font-weight: 900;
+          color: #ffffff;
+          letter-spacing: 0;
+          margin-left: 2px;
+          font-variant-numeric: tabular-nums;
         }
         .hero-lock-badge {
           position: absolute;
@@ -3845,6 +3961,118 @@ class Byd3DCard extends HTMLElement {
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 8px;
         }
+        .hybrid-summary-grid {
+          margin-top: 8px;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 8px;
+        }
+        .hybrid-summary-item {
+          border-radius: 13px;
+          padding: 8px 9px;
+          border: 1px solid rgba(255,255,255,.11);
+          background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+          display: grid;
+          gap: 5px;
+          min-height: 66px;
+          align-content: center;
+        }
+        .hybrid-summary-item.tone-fuel {
+          border-color: rgba(130, 198, 236, .36);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+        }
+        .hybrid-summary-item.tone-battery {
+          border-color: rgba(124, 220, 170, .34);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+        }
+        .hybrid-summary-item.tone-range {
+          border-color: rgba(173, 201, 241, .34);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+        }
+        .hybrid-summary-label {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          color: rgba(219,238,255,.9);
+          font-size: 12px;
+          font-weight: 800;
+          line-height: 1.1;
+        }
+        .hybrid-summary-label ha-icon {
+          width: 14px;
+          height: 14px;
+          --mdc-icon-size: 14px;
+          color: rgba(205,232,255,.92);
+        }
+        .hybrid-summary-value {
+          text-align: center;
+          font-size: 23px;
+          line-height: 1;
+          font-weight: 900;
+          color: #f4fbff;
+          font-variant-numeric: tabular-nums;
+          direction: ltr;
+          unicode-bidi: plaintext;
+        }
+        .hybrid-compare {
+          margin-top: 7px;
+          border-radius: 13px;
+          border: 1px solid rgba(157,190,220,.24);
+          background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+          padding: 8px;
+          display: grid;
+          gap: 7px;
+        }
+        .hybrid-compare-row {
+          display: grid;
+          gap: 5px;
+        }
+        .hybrid-compare-head {
+          display: grid;
+          grid-template-columns: 16px auto 1fr auto;
+          align-items: center;
+          gap: 6px;
+          color: rgba(224,242,255,.9);
+          font-size: 12px;
+          font-weight: 800;
+        }
+        .hybrid-compare-head ha-icon {
+          width: 14px;
+          height: 14px;
+          --mdc-icon-size: 14px;
+          color: rgba(205,232,255,.92);
+        }
+        .hybrid-compare-head strong {
+          font-size: 13px;
+          font-weight: 900;
+          color: #f3fbff;
+          direction: ltr;
+          unicode-bidi: plaintext;
+          font-variant-numeric: tabular-nums;
+        }
+        .hybrid-compare-track {
+          height: 9px;
+          border-radius: 999px;
+          background: linear-gradient(180deg, rgba(8,14,22,.85), rgba(13,22,34,.9));
+          border: 1px solid rgba(176,212,238,.2);
+          overflow: hidden;
+        }
+        .hybrid-compare-fill {
+          display: block;
+          height: 100%;
+          border-radius: 999px;
+          transition: width .35s ease;
+          min-width: 0;
+        }
+        .hybrid-compare-fill.fuel {
+          background: linear-gradient(90deg, #7ac6ff 0%, #92ddff 100%);
+          box-shadow: 0 0 10px rgba(122,198,255,.32);
+        }
+        .hybrid-compare-fill.battery {
+          background: linear-gradient(90deg, #75e2b0 0%, #97f2c8 100%);
+          box-shadow: 0 0 10px rgba(117,226,176,.32);
+        }
         .vehicle-metrics {
           grid-template-columns: repeat(3, minmax(0, 1fr));
         }
@@ -4227,15 +4455,35 @@ class Byd3DCard extends HTMLElement {
             height: 17px;
           }
           .hero-custom-badge,
-          .hero-lock-badge {
+          .hero-lock-badge,
+          .hero-cost-badge {
             width: 36px;
             height: 36px;
           }
           .hero-custom-badge ha-icon,
-          .hero-lock-badge ha-icon {
+          .hero-lock-badge ha-icon,
+          .hero-cost-badge ha-icon {
             --mdc-icon-size: 18px;
             width: 18px;
             height: 18px;
+          }
+          .hero-hybrid-strip {
+            top: 9px;
+            gap: 6px;
+            padding: 4px 7px;
+            border-radius: 9px;
+            max-width: calc(100% - 160px);
+          }
+          .hero-hybrid-strip ha-icon {
+            --mdc-icon-size: 14px;
+            width: 14px;
+            height: 14px;
+          }
+          .hero-hybrid-value {
+            font-size: 13px;
+          }
+          .hero-hybrid-range {
+            font-size: 16px;
           }
           .alert-ribbon-inner { padding: 5px 8px; gap: 6px; grid-template-columns: auto minmax(0, 1fr); }
           .alert-single { font-size: 12px; }
@@ -4250,6 +4498,15 @@ class Byd3DCard extends HTMLElement {
           .cat-tab ha-icon { width: 14px; height: 14px; }
           .metric label { font-size: 13px; }
           .metric strong { font-size: 18px; }
+          .hybrid-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+          .hybrid-summary-item { min-height: 58px; padding: 7px 7px; gap: 4px; }
+          .hybrid-summary-label { font-size: 11px; gap: 4px; }
+          .hybrid-summary-label ha-icon { --mdc-icon-size: 12px; width: 12px; height: 12px; }
+          .hybrid-summary-value { font-size: 19px; }
+          .hybrid-compare { padding: 7px; gap: 6px; }
+          .hybrid-compare-head { font-size: 11px; }
+          .hybrid-compare-head ha-icon { --mdc-icon-size: 12px; width: 12px; height: 12px; }
+          .hybrid-compare-head strong { font-size: 12px; }
           .action-btn { font-size: 14px; }
           .action-btn ha-icon { width: 17px; height: 17px; }
           .custom-actions-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
