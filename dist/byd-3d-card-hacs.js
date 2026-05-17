@@ -4,7 +4,7 @@
 
 const CARD_TYPE = "byd-3d-card";
 const CARD_NAME = "BYD 3D Card";
-const CARD_VERSION = "1.0.13";
+const CARD_VERSION = "1.0.14";
 const DEFAULT_ASSET_BASE_PATH = (() => {
   try {
     const base = new URL(".", import.meta.url).pathname;
@@ -177,6 +177,19 @@ const ENTITY_HINTS = {
   battery: { domains: ["sensor"], suffixes: ["battery_level", "elec_percent"] },
   range: { domains: ["sensor"], suffixes: ["range", "endurance_mileage", "endurance_mileage_v2"] },
   charging: { domains: ["binary_sensor"], suffixes: ["charging", "is_charging"] },
+  charging_energy: {
+    domains: ["sensor"],
+    suffixes: [
+      "charging_energy",
+      "charge_energy",
+      "total_charging_energy",
+      "charged_energy",
+      "total_charged_energy",
+      "charging_kwh",
+      "charge_added",
+      "session_energy",
+    ],
+  },
   battery_power: { domains: ["sensor"], suffixes: ["battery_power"] },
   climate: { domains: ["climate", "switch"], suffixes: ["climate", "a_c_on", "car_on"] },
   ac_switch: { domains: ["switch"], suffixes: ["a_c_on", "climate", "car_on"] },
@@ -239,6 +252,9 @@ const DEFAULT_CONFIG = {
   require_unlock_pin: false,
   unlock_pin_code: "",
   show_external_entities: true,
+  show_charging_cost: false,
+  charging_cost_per_kwh: 0,
+  charging_cost_mode: "monthly",
   tire_pressure_unit: "psi",
   refresh_interval_seconds: 25,
   language: "he",
@@ -413,6 +429,12 @@ const FALLBACK_I18N = {
   seat_mode_both: "שניהם",
   settings_show_vehicle: "הצג רכב",
   settings_show_location: "הצג מיקום",
+  settings_show_charging_cost: "הצג עלות טעינה",
+  settings_charging_cost_per_kwh: "מחיר לקוט״ש",
+  settings_charging_cost_per_kwh_hint: "הערך משמש לחישוב עלות הטעינה לפי אנרגיה נצרכת",
+  settings_charging_cost_mode: "אופן חישוב צריכה",
+  charging_cost_mode_monthly: "חודשי פנימי",
+  charging_cost_mode_sensor: "ערך חיישן נוכחי",
   settings_require_unlock_pin: "דרוש קוד PIN לפני פתיחה",
   settings_unlock_pin_code: "קוד PIN לפתיחת רכב",
   settings_unlock_pin_hint: "הזן 4-8 ספרות. הקוד נשמר בהגדרות הכרטיס.",
@@ -438,6 +460,15 @@ const FALLBACK_I18N = {
   external_actions_subtitle: "בחר פעולה להפעלה מהירה",
   external_actions_empty: "לא נבחרו ישויות",
   open_external_actions: "פתח פעולות חיצוניות",
+  open_charging_cost: "הצג עלות טעינה",
+  charging_cost_title: "עלות טעינה",
+  charging_cost_subtitle: "חישוב לפי אנרגיית טעינה ומחיר לקוט״ש",
+  charging_consumption_value: "צריכה",
+  charging_period_value: "תקופה",
+  charging_period_sensor: "נוכחי",
+  charging_rate_value: "מחיר לקוט״ש",
+  charging_total_cost: "עלות משוערת",
+  charging_cost_unavailable: "אין נתוני צריכה זמינים",
   add_external_entity: "הוסף יישות",
   state_on: "דולק",
   state_off: "כבוי",
@@ -602,6 +633,23 @@ function normalizeUnlockPinCode(value) {
     .slice(0, 8);
 }
 
+function normalizeChargingCostEnabled(value) {
+  return value === true;
+}
+
+function normalizeChargingCostPerKwh(value) {
+  if (value === null || value === undefined) return 0;
+  const normalizedRaw = String(value).trim().replace(",", ".");
+  const n = Number(normalizedRaw);
+  if (!Number.isFinite(n)) return 0;
+  return clamp(n, 0, 1000);
+}
+
+function normalizeChargingCostMode(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  return raw === "sensor" ? "sensor" : "monthly";
+}
+
 function normalizeImageBasePath(value) {
   const cleaned = String(value || "").trim().replace(/\/$/, "");
   if (!cleaned) return DEFAULT_IMAGE_BASE_PATH;
@@ -710,6 +758,9 @@ class Byd3DCard extends HTMLElement {
     );
     this._config.show_seat_cooling = this._config.seat_passenger_mode === "cool";
     this._config.show_external_entities = normalizeExternalEntitiesEnabled(this._config.show_external_entities);
+    this._config.show_charging_cost = normalizeChargingCostEnabled(this._config.show_charging_cost);
+    this._config.charging_cost_per_kwh = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh);
+    this._config.charging_cost_mode = normalizeChargingCostMode(this._config.charging_cost_mode);
     this._config.require_unlock_pin = normalizeUnlockPinEnabled(this._config.require_unlock_pin);
     this._config.unlock_pin_code = normalizeUnlockPinCode(this._config.unlock_pin_code);
     this._config.category_order = this._normalizeCategoryOrder(this._config.category_order);
@@ -740,9 +791,13 @@ class Byd3DCard extends HTMLElement {
     this._confirmation = null;
     this._locationMapDialog = null;
     this._customEntitiesDialogOpen = false;
+    this._chargingCostDialogOpen = false;
     this._buttonFeedbacks = new Map();
     if (!this._config.show_external_entities) {
       this._customEntitiesDialogOpen = false;
+    }
+    if (!this._config.show_charging_cost) {
+      this._chargingCostDialogOpen = false;
     }
     this._translations = FALLBACK_I18N;
     this._loadTranslations();
@@ -796,6 +851,7 @@ class Byd3DCard extends HTMLElement {
       "battery",
       "range",
       "charging",
+      "charging_energy",
       "battery_power",
       "climate",
       "ac_switch",
@@ -940,6 +996,9 @@ class Byd3DCard extends HTMLElement {
     if (logicalKey === "battery_power") {
       return `${logicalKey}:${state.state}|${attrs.unit_of_measurement ?? ""}`;
     }
+    if (logicalKey === "charging_energy") {
+      return `${logicalKey}:${state.state}|${attrs.unit_of_measurement ?? ""}`;
+    }
     return `${logicalKey}:${state.state}`;
   }
 
@@ -949,6 +1008,7 @@ class Byd3DCard extends HTMLElement {
       "battery",
       "range",
       "charging",
+      "charging_energy",
       "battery_power",
       "cabin_temp",
       "exterior_temp",
@@ -1319,6 +1379,151 @@ class Byd3DCard extends HTMLElement {
     return this._hass.states[eid];
   }
 
+  _isChargingCostVisible() {
+    return normalizeChargingCostEnabled(this._config?.show_charging_cost);
+  }
+
+  _chargingCostPerKwh() {
+    return normalizeChargingCostPerKwh(this._config?.charging_cost_per_kwh);
+  }
+
+  _chargingCostMode() {
+    return normalizeChargingCostMode(this._config?.charging_cost_mode);
+  }
+
+  _chargingCostStorageKey() {
+    const prefix = this._config?.entity_prefix || "auto";
+    const profile = this._config?.vehicle_profile || "default";
+    const path = window?.location?.pathname || "";
+    return `byd3d:charging-cost:${path}:${profile}:${prefix}`;
+  }
+
+  _currentMonthKey() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  }
+
+  _loadChargingMonthlyTracker() {
+    try {
+      const raw = window.localStorage.getItem(this._chargingCostStorageKey());
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return null;
+      return parsed;
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  _saveChargingMonthlyTracker(data) {
+    try {
+      window.localStorage.setItem(this._chargingCostStorageKey(), JSON.stringify(data));
+    } catch (_err) {
+      // no-op: storage might be blocked by browser policy
+    }
+  }
+
+  _monthlyChargingEnergyKwh(sensorEnergyKwh) {
+    const monthKey = this._currentMonthKey();
+    const stored = this._loadChargingMonthlyTracker();
+    const tracker =
+      stored && typeof stored === "object"
+        ? {
+            monthKey: String(stored.monthKey || ""),
+            totalKwh: Number.isFinite(Number(stored.totalKwh)) ? Number(stored.totalKwh) : 0,
+            lastEnergyKwh: Number.isFinite(Number(stored.lastEnergyKwh)) ? Number(stored.lastEnergyKwh) : null,
+          }
+        : { monthKey, totalKwh: 0, lastEnergyKwh: null };
+
+    let changed = false;
+    if (tracker.monthKey !== monthKey) {
+      tracker.monthKey = monthKey;
+      tracker.totalKwh = 0;
+      tracker.lastEnergyKwh = Number.isFinite(sensorEnergyKwh) ? sensorEnergyKwh : null;
+      changed = true;
+    } else if (Number.isFinite(sensorEnergyKwh)) {
+      if (tracker.lastEnergyKwh === null) {
+        tracker.lastEnergyKwh = sensorEnergyKwh;
+        changed = true;
+      } else {
+        const delta = sensorEnergyKwh - tracker.lastEnergyKwh;
+        if (delta > 0) {
+          tracker.totalKwh += delta;
+          changed = true;
+        }
+        if (Math.abs(sensorEnergyKwh - tracker.lastEnergyKwh) > 0.000001) {
+          tracker.lastEnergyKwh = sensorEnergyKwh;
+          changed = true;
+        }
+      }
+    }
+
+    tracker.totalKwh = Math.max(0, tracker.totalKwh);
+    if (changed) this._saveChargingMonthlyTracker(tracker);
+    return { monthKey: tracker.monthKey, totalKwh: tracker.totalKwh };
+  }
+
+  _formatChargingPeriodLabel(monthKey) {
+    const raw = String(monthKey || "").trim();
+    const match = raw.match(/^(\d{4})-(\d{2})$/);
+    if (!match) return raw || "-";
+    const [, year, month] = match;
+    return `${month}/${year}`;
+  }
+
+  _normalizeEnergySensorUnit(rawUnit) {
+    const unit = String(rawUnit || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "");
+    if (!unit) return null;
+    if (["kwh", "kw/h", "kilo watthour", "kilowatthour", "kilowatt-hour"].includes(unit)) return "kwh";
+    if (["wh", "watthour", "watt-hour"].includes(unit)) return "wh";
+    if (["mwh", "megawatthour", "megawatt-hour"].includes(unit)) return "mwh";
+    return null;
+  }
+
+  _convertEnergyUnit(value, fromUnit, toUnit) {
+    if (!Number.isFinite(value)) return null;
+    if (fromUnit === toUnit) return value;
+
+    let kwh = value;
+    if (fromUnit === "wh") kwh = value / 1000;
+    if (fromUnit === "mwh") kwh = value * 1000;
+
+    if (toUnit === "kwh") return kwh;
+    if (toUnit === "wh") return kwh * 1000;
+    if (toUnit === "mwh") return kwh / 1000;
+    return value;
+  }
+
+  _chargingEnergyKwh() {
+    const chargingEnergyState = this._state("charging_energy");
+    const value = toNumber(chargingEnergyState?.state);
+    if (value === null) return null;
+    const sourceUnit = this._normalizeEnergySensorUnit(chargingEnergyState?.attributes?.unit_of_measurement) || "kwh";
+    const converted = this._convertEnergyUnit(value, sourceUnit, "kwh");
+    if (!Number.isFinite(converted)) return null;
+    return converted;
+  }
+
+  _chargingCostData() {
+    const rawEnergyKwh = this._chargingEnergyKwh();
+    const mode = this._chargingCostMode();
+    const monthly = this._monthlyChargingEnergyKwh(rawEnergyKwh);
+    const energyKwh = mode === "monthly" ? monthly.totalKwh : rawEnergyKwh;
+    const rate = this._chargingCostPerKwh();
+    const hasEnergy = Number.isFinite(energyKwh);
+    return {
+      energyKwh: hasEnergy ? energyKwh : null,
+      ratePerKwh: rate,
+      totalCost: hasEnergy ? energyKwh * rate : null,
+      hasEnergy,
+      mode,
+      monthKey: monthly.monthKey,
+    };
+  }
+
   _isUnlockPinRequired() {
     return normalizeUnlockPinEnabled(this._config?.require_unlock_pin);
   }
@@ -1637,6 +1842,18 @@ class Byd3DCard extends HTMLElement {
   _hideCustomEntitiesDialog() {
     if (!this._customEntitiesDialogOpen) return;
     this._customEntitiesDialogOpen = false;
+    this._render();
+  }
+
+  _showChargingCostDialog() {
+    if (!this._isChargingCostVisible()) return;
+    this._chargingCostDialogOpen = true;
+    this._render();
+  }
+
+  _hideChargingCostDialog() {
+    if (!this._chargingCostDialogOpen) return;
+    this._chargingCostDialogOpen = false;
     this._render();
   }
 
@@ -2127,6 +2344,14 @@ class Byd3DCard extends HTMLElement {
     }
     const visibleServiceIndicators = serviceIndicators.slice(0, 3);
     const customEntities = this._customEntities();
+    const chargingCostData = this._chargingCostData();
+    const chargingCostRateLabel = this._chargingCostPerKwh().toFixed(2);
+    const chargingCostEnergyLabel = chargingCostData.hasEnergy ? `${chargingCostData.energyKwh.toFixed(2)} kWh` : "-";
+    const chargingCostTotalLabel = chargingCostData.hasEnergy ? chargingCostData.totalCost.toFixed(2) : "-";
+    const chargingCostPeriodLabel =
+      chargingCostData.mode === "monthly"
+        ? this._formatChargingPeriodLabel(chargingCostData.monthKey)
+        : this._t("charging_period_sensor");
     const heroBatteryOverlay = `
       <div class="hero-battery-badge ${lowBattery ? "low" : ""}">
         <span class="hero-battery-label">${this._t("battery_status")}</span>
@@ -2144,6 +2369,13 @@ class Byd3DCard extends HTMLElement {
       ? `
         <div class="hero-custom-badge actionable" title="${this._t("open_external_actions")}" data-hero-custom-actions>
           <ha-icon icon="mdi:script-text-outline"></ha-icon>
+        </div>
+      `
+      : "";
+    const heroChargingCostBadge = this._isChargingCostVisible()
+      ? `
+        <div class="hero-cost-badge actionable" title="${this._t("open_charging_cost")}" data-hero-charging-cost>
+          <ha-icon icon="mdi:cash-100"></ha-icon>
         </div>
       `
       : "";
@@ -2448,6 +2680,48 @@ class Byd3DCard extends HTMLElement {
         </div>
       `
       : "";
+    const chargingCostOverlay = this._chargingCostDialogOpen
+      ? `
+        <div class="dialog-backdrop charging-cost-backdrop" data-cost-dialog-backdrop>
+          <div class="charging-cost-dialog-card" role="dialog" aria-modal="true">
+            <div class="charging-cost-dialog-header">
+              <div class="charging-cost-dialog-title">${this._t("charging_cost_title")}</div>
+              <button class="charging-cost-close-icon" data-cost-dialog-action="close" aria-label="${this._t("close")}">
+                <ha-icon icon="mdi:close"></ha-icon>
+              </button>
+            </div>
+            <div class="charging-cost-dialog-subtitle">${this._t("charging_cost_subtitle")}</div>
+            ${
+              chargingCostData.hasEnergy
+                ? `
+              <div class="charging-cost-grid">
+                <div class="charging-cost-item">
+                  <span class="charging-cost-item-label">${this._t("charging_period_value")}</span>
+                  <span class="charging-cost-item-value">${chargingCostPeriodLabel}</span>
+                </div>
+                <div class="charging-cost-item">
+                  <span class="charging-cost-item-label">${this._t("charging_consumption_value")}</span>
+                  <span class="charging-cost-item-value">${chargingCostEnergyLabel}</span>
+                </div>
+                <div class="charging-cost-item">
+                  <span class="charging-cost-item-label">${this._t("charging_rate_value")}</span>
+                  <span class="charging-cost-item-value">${chargingCostRateLabel}</span>
+                </div>
+                <div class="charging-cost-item total">
+                  <span class="charging-cost-item-label">${this._t("charging_total_cost")}</span>
+                  <span class="charging-cost-item-value">${chargingCostTotalLabel}</span>
+                </div>
+              </div>
+            `
+                : `<div class="charging-cost-empty">${this._t("charging_cost_unavailable")}</div>`
+            }
+            <div class="charging-cost-dialog-actions">
+              <button class="dialog-btn cancel" data-cost-dialog-action="close">${this._t("close")}</button>
+            </div>
+          </div>
+        </div>
+      `
+      : "";
 
     this.shadowRoot.innerHTML = `
       <ha-card>
@@ -2459,6 +2733,7 @@ class Byd3DCard extends HTMLElement {
               ${heroBatteryOverlay}
               ${serviceOverlay}
               ${heroCustomBadge}
+              ${heroChargingCostBadge}
               ${heroLockBadge}
             </div>
           </div>
@@ -2467,6 +2742,7 @@ class Byd3DCard extends HTMLElement {
           ${confirmationOverlay}
           ${locationMapOverlay}
           ${customEntitiesOverlay}
+          ${chargingCostOverlay}
 
           <div class="category-tabs" role="radiogroup" aria-label="${this._t("aria_vehicle_categories")}">
             ${visibleTabs
@@ -2665,6 +2941,36 @@ class Byd3DCard extends HTMLElement {
           height: 20px;
           --mdc-icon-size: 20px;
           color: #d9ecff;
+        }
+        .hero-cost-badge {
+          position: absolute;
+          left: 50%;
+          bottom: 12px;
+          transform: translateX(-50%);
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(123, 210, 148, .62);
+          background: rgba(5,9,14,.88);
+          box-shadow: 0 0 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.1);
+        }
+        .hero-cost-badge.actionable {
+          cursor: pointer;
+        }
+        .hero-cost-badge.actionable:active {
+          transform: translateX(-50%) scale(.96);
+        }
+        .hero-cost-badge ha-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+          --mdc-icon-size: 20px;
+          color: #d9ffea;
         }
         .hero-service-item ha-icon {
           width: 20px;
@@ -3042,6 +3348,102 @@ class Byd3DCard extends HTMLElement {
           text-align: center;
           font-size: 14px;
           font-weight: 700;
+        }
+        .charging-cost-backdrop {
+          z-index: 32;
+        }
+        .charging-cost-dialog-card {
+          width: min(100%, 460px);
+          border-radius: 24px;
+          padding: 14px;
+          background: linear-gradient(180deg, rgba(8, 13, 22, .98), rgba(5, 9, 15, .99));
+          border: 1px solid rgba(255,255,255,.14);
+          box-shadow: 0 24px 80px rgba(0,0,0,.45);
+          display: grid;
+          gap: 10px;
+        }
+        .charging-cost-dialog-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+        .charging-cost-dialog-title {
+          font-size: 18px;
+          font-weight: 900;
+          color: #f4faff;
+        }
+        .charging-cost-dialog-subtitle {
+          font-size: 13px;
+          color: rgba(220,236,252,.86);
+        }
+        .charging-cost-close-icon {
+          appearance: none;
+          border: 1px solid rgba(255,255,255,.2);
+          background: rgba(255,255,255,.08);
+          color: #f0f8ff;
+          border-radius: 12px;
+          width: 38px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: transform .15s ease, filter .15s ease;
+        }
+        .charging-cost-close-icon:hover {
+          transform: translateY(-1px);
+          filter: brightness(1.06);
+        }
+        .charging-cost-close-icon ha-icon {
+          width: 20px;
+          height: 20px;
+        }
+        .charging-cost-grid {
+          display: grid;
+          gap: 8px;
+        }
+        .charging-cost-item {
+          border: 1px solid rgba(255,255,255,.12);
+          background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+          border-radius: 12px;
+          padding: 10px 12px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+        .charging-cost-item.total {
+          border-color: rgba(123, 210, 148, .5);
+          box-shadow: 0 0 12px rgba(123, 210, 148, .18);
+        }
+        .charging-cost-item-label {
+          font-size: 13px;
+          font-weight: 700;
+          color: rgba(224,245,255,.88);
+        }
+        .charging-cost-item-value {
+          font-size: 16px;
+          font-weight: 900;
+          color: #f3fbff;
+          direction: ltr;
+          unicode-bidi: plaintext;
+          text-align: left;
+          font-variant-numeric: tabular-nums;
+        }
+        .charging-cost-empty {
+          border-radius: 12px;
+          border: 1px dashed rgba(255,255,255,.22);
+          background: rgba(255,255,255,.04);
+          color: rgba(225,240,255,.88);
+          padding: 14px;
+          text-align: center;
+          font-size: 14px;
+          font-weight: 700;
+        }
+        .charging-cost-dialog-actions {
+          display: flex;
+          justify-content: flex-end;
         }
         .hero-service-item.tone-cold {
           border-color: rgba(93,201,255,.52);
@@ -3999,6 +4401,13 @@ class Byd3DCard extends HTMLElement {
       });
     });
 
+    this.shadowRoot.querySelectorAll("[data-hero-charging-cost]").forEach((badge) => {
+      badge.addEventListener("click", () => {
+        this._flashButtonFeedback(badge);
+        this._showChargingCostDialog();
+      });
+    });
+
     this.shadowRoot.querySelectorAll("[data-dialog-backdrop]").forEach((backdrop) => {
       backdrop.addEventListener("click", (event) => {
         if (event.target === backdrop) this._hideConfirmation();
@@ -4014,6 +4423,12 @@ class Byd3DCard extends HTMLElement {
     this.shadowRoot.querySelectorAll("[data-custom-dialog-backdrop]").forEach((backdrop) => {
       backdrop.addEventListener("click", (event) => {
         if (event.target === backdrop) this._hideCustomEntitiesDialog();
+      });
+    });
+
+    this.shadowRoot.querySelectorAll("[data-cost-dialog-backdrop]").forEach((backdrop) => {
+      backdrop.addEventListener("click", (event) => {
+        if (event.target === backdrop) this._hideChargingCostDialog();
       });
     });
 
@@ -4060,6 +4475,15 @@ class Byd3DCard extends HTMLElement {
       });
     });
 
+    this.shadowRoot.querySelectorAll("[data-cost-dialog-action]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const action = btn.getAttribute("data-cost-dialog-action");
+        if (action === "close") {
+          this._hideChargingCostDialog();
+        }
+      });
+    });
+
     this.shadowRoot.querySelectorAll("[data-custom-entity]").forEach((btn) => {
       btn.addEventListener("click", () => {
         this._flashButtonFeedback(btn);
@@ -4093,6 +4517,9 @@ class Byd3DCardEditor extends HTMLElement {
     );
     this._config.show_seat_cooling = this._config.seat_passenger_mode === "cool";
     this._config.show_external_entities = normalizeExternalEntitiesEnabled(this._config.show_external_entities);
+    this._config.show_charging_cost = normalizeChargingCostEnabled(this._config.show_charging_cost);
+    this._config.charging_cost_per_kwh = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh);
+    this._config.charging_cost_mode = normalizeChargingCostMode(this._config.charging_cost_mode);
     this._config.require_unlock_pin = normalizeUnlockPinEnabled(this._config.require_unlock_pin);
     this._config.unlock_pin_code = normalizeUnlockPinCode(this._config.unlock_pin_code);
     this._config.category_order = this._normalizeCategoryOrder(this._config.category_order);
@@ -4690,6 +5117,9 @@ class Byd3DCardEditor extends HTMLElement {
 
   _emitChange(partial) {
     this._config = { ...this._config, ...partial };
+    this._config.show_charging_cost = normalizeChargingCostEnabled(this._config.show_charging_cost);
+    this._config.charging_cost_per_kwh = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh);
+    this._config.charging_cost_mode = normalizeChargingCostMode(this._config.charging_cost_mode);
     this._config.custom_entities = normalizeCustomEntities(this._config.custom_entities);
     this._config.custom_entity_names = pruneCustomEntityNames(
       this._config.custom_entity_names,
@@ -4874,6 +5304,26 @@ class Byd3DCardEditor extends HTMLElement {
               <label class="toggle-chip"><input id="show_tires" type="checkbox" ${this._config.show_tires ? "checked" : ""}/> <span>${this._t("settings_show_tires")}</span></label>
               <label class="toggle-chip"><input id="show_actions" type="checkbox" ${this._config.show_actions ? "checked" : ""}/> <span>${this._t("settings_show_actions")}</span></label>
               <label class="toggle-chip"><input id="show_location" type="checkbox" ${this._config.show_location ? "checked" : ""}/> <span>${this._t("settings_show_location")}</span></label>
+              <label class="toggle-chip"><input id="show_charging_cost" type="checkbox" ${normalizeChargingCostEnabled(this._config.show_charging_cost) ? "checked" : ""}/> <span>${this._t("settings_show_charging_cost")}</span></label>
+              <div class="field">
+                <label>${this._t("settings_charging_cost_per_kwh")}</label>
+                <input
+                  id="charging_cost_per_kwh"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  step="0.01"
+                  value="${normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh)}"
+                />
+                <small>${this._t("settings_charging_cost_per_kwh_hint")}</small>
+              </div>
+              <div class="field">
+                <label>${this._t("settings_charging_cost_mode")}</label>
+                <select id="charging_cost_mode">
+                  <option value="monthly" ${normalizeChargingCostMode(this._config.charging_cost_mode) === "monthly" ? "selected" : ""}>${this._t("charging_cost_mode_monthly")}</option>
+                  <option value="sensor" ${normalizeChargingCostMode(this._config.charging_cost_mode) === "sensor" ? "selected" : ""}>${this._t("charging_cost_mode_sensor")}</option>
+                </select>
+              </div>
               <label class="toggle-chip"><input id="require_unlock_pin" type="checkbox" ${normalizeUnlockPinEnabled(this._config.require_unlock_pin) ? "checked" : ""}/> <span>${this._t("settings_require_unlock_pin")}</span></label>
               <div class="field">
                 <label>${this._t("settings_unlock_pin_code")}</label>
@@ -5614,6 +6064,9 @@ class Byd3DCardEditor extends HTMLElement {
         show_tires: this.shadowRoot.getElementById("show_tires").checked,
         show_actions: this.shadowRoot.getElementById("show_actions").checked,
         show_location: this.shadowRoot.getElementById("show_location").checked,
+        show_charging_cost: normalizeChargingCostEnabled(this.shadowRoot.getElementById("show_charging_cost")?.checked),
+        charging_cost_per_kwh: normalizeChargingCostPerKwh(this.shadowRoot.getElementById("charging_cost_per_kwh")?.value),
+        charging_cost_mode: normalizeChargingCostMode(this.shadowRoot.getElementById("charging_cost_mode")?.value),
         require_unlock_pin: normalizeUnlockPinEnabled(this.shadowRoot.getElementById("require_unlock_pin")?.checked),
         unlock_pin_code: normalizeUnlockPinCode(this.shadowRoot.getElementById("unlock_pin_code")?.value),
         show_external_entities: normalizeExternalEntitiesEnabled(
@@ -5658,6 +6111,9 @@ class Byd3DCardEditor extends HTMLElement {
     bindChange("show_tires");
     bindChange("show_actions");
     bindChange("show_location");
+    bindChange("show_charging_cost");
+    bindChange("charging_cost_per_kwh");
+    bindChange("charging_cost_mode");
     bindChange("require_unlock_pin");
     bindChange("unlock_pin_code");
 

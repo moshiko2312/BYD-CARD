@@ -32,6 +32,10 @@ Recommended order:
 - Local profile images from `pic/`
 - External actions: choose multiple entities from Home Assistant and trigger them from a hero popup
 - Optional unlock PIN protection with numeric keypad popup (`Enter` to confirm)
+- Charging cost popup with configurable `cost per kWh`
+- Charging consumption mode selector:
+  - `monthly` (internal monthly tracking)
+  - `sensor` (direct current sensor value)
 
 ## Install
 
@@ -69,7 +73,7 @@ Check these quickly:
    - Manual install: `/config/www/byd-card/byd-3d-card.js`
    - HACS install: `/config/www/community/<repository-name>/byd-3d-card-hacs.js`
 4. If browser/app cache is stale, add a version query:
-   - `/hacsfiles/<repository-name>/byd-3d-card-hacs.js?v=1.0.13`
+   - `/hacsfiles/<repository-name>/byd-3d-card-hacs.js?v=1.0.14`
 5. Then hard refresh the browser/app again.
 
 ## Basic YAML
@@ -86,6 +90,9 @@ show_actions: true
 show_climate: true
 show_vehicle: true
 show_location: true
+show_charging_cost: true
+charging_cost_per_kwh: 0.63
+charging_cost_mode: monthly
 require_unlock_pin: false
 unlock_pin_code: ""
 tire_pressure_unit: psi
@@ -120,6 +127,13 @@ entities: {}
 - A script icon appears on the hero image (left-bottom, aligned with lock badge).
 - Tap it to open a 3-column popup grid with buttons for selected entities.
 - In card editor, each selected entity can get a custom icon (for example `mdi:gate-open`).
+
+Charging cost options:
+- `show_charging_cost`: shows/hides money icon on hero image and the charging cost popup.
+- `charging_cost_per_kwh`: numeric price used for cost calculation.
+- `charging_cost_mode`:
+  - `monthly`: tracks monthly consumed charging energy internally and resets at a new month.
+  - `sensor`: uses current charging-energy sensor value directly.
 
 ## How to enable unlock PIN (step by step)
 
@@ -294,6 +308,30 @@ What it shows:
 - Catalan (`Català`) language support in the editor
 - New vehicle profiles in selection grid: `ATTO 2`, `DOLPHIN SURF`, `TANG`
 - Live preview with the new `TANG` profile
+
+### 10) Charging cost popup (Hebrew)
+![Charging cost popup Hebrew](docs/screenshots/16-charging-cost-popup-he.jpg)
+
+What it shows:
+- Dedicated charging cost popup from hero money icon
+- Monthly period display (`MM/YYYY`)
+- Consumption (`kWh`), price per `kWh`, and estimated total cost
+
+### 10.1) Charging cost settings in editor
+![Editor charging cost mode Hebrew](docs/screenshots/17-editor-charging-cost-mode-he.jpg)
+
+What it shows:
+- Price per `kWh` input field
+- Consumption mode dropdown:
+  - `Internal monthly`
+  - `Current sensor value`
+
+### 10.2) Hero money icon placement
+![Hero charging cost icon Hebrew](docs/screenshots/18-hero-charging-cost-icon-he.jpg)
+
+What it shows:
+- Money icon positioned in hero area between external actions and lock icons
+- Quick access to charging cost popup from the main dashboard view
 
 ## Notes
 

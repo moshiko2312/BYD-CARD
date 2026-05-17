@@ -66,6 +66,12 @@
   "settings_show_climate": "Mostra la climatització",
   "settings_show_vehicle": "Mostra el vehicle",
   "settings_show_location": "Mostra la ubicació",
+  "settings_show_charging_cost": "Mostra el cost de càrrega",
+  "settings_charging_cost_per_kwh": "Cost per kWh",
+  "settings_charging_cost_per_kwh_hint": "S'utilitza per calcular el cost de la càrrega segons l'energia consumida",
+  "settings_charging_cost_mode": "Mode de càlcul del consum",
+  "charging_cost_mode_monthly": "Mensual intern",
+  "charging_cost_mode_sensor": "Valor actual del sensor",
   "climate_controls": "Controls de climatització",
   "turn_on": "Activa",
   "turn_off": "Desactiva",
@@ -94,5 +100,14 @@
   "seat_mode_heat": "Calor",
   "seat_mode_cool": "Fred",
   "seat_mode_both": "Ambdós",
-  "settings_seat_mode": "Mode del seient del passatger"
+  "settings_seat_mode": "Mode del seient del passatger",
+  "open_charging_cost": "Mostra el cost de càrrega",
+  "charging_cost_title": "Cost de càrrega",
+  "charging_cost_subtitle": "Calculat segons l'energia de càrrega i el cost per kWh",
+  "charging_consumption_value": "Consum",
+  "charging_period_value": "Període",
+  "charging_period_sensor": "Actual",
+  "charging_rate_value": "Cost per kWh",
+  "charging_total_cost": "Cost estimat",
+  "charging_cost_unavailable": "No hi ha dades de consum disponibles"
 }
