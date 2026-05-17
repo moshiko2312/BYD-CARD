@@ -37,8 +37,10 @@ Recommended order:
   - `monthly` (internal monthly tracking)
   - `sensor` (direct current sensor value)
 - Hybrid profile support (`SEAL 5`, `TANG`):
-  - Hero hybrid strip (`fuel %`, `battery %`, `range km`)
-  - Summary hybrid cards + fuel-vs-battery comparison bars
+  - Hero top strip:
+    - Hybrid: `fuel %` + `battery %` + `range km`
+    - Non-hybrid: `battery %` + `range km` (no fuel shown)
+  - Summary fuel panel with progress bar (same style structure as battery bar)
   - Uses BYD integration sensor naming (`elec_percent`, `oil_percent`, `oil_endurance`)
 
 ## Install
@@ -77,7 +79,7 @@ Check these quickly:
    - Manual install: `/config/www/byd-card/byd-3d-card.js`
    - HACS install: `/config/www/community/<repository-name>/byd-3d-card-hacs.js`
 4. If browser/app cache is stale, add a version query:
-   - `/hacsfiles/<repository-name>/byd-3d-card-hacs.js?v=1.0.15`
+   - `/hacsfiles/<repository-name>/byd-3d-card-hacs.js?v=1.0.16`
 5. Then hard refresh the browser/app again.
 
 ## Basic YAML
@@ -140,7 +142,8 @@ Charging cost options:
   - `sensor`: uses current charging-energy sensor value directly.
 
 Hybrid behavior:
-- Hybrid strip and hybrid summary comparison are shown only for hybrid profiles (`seal5`, `tang`).
+- Hybrid fuel in top strip and summary panel is shown only for hybrid profiles (`seal5`, `tang`).
+- Non-hybrid profiles keep top strip with battery/range only.
 - The card prefers sensor mapping used by `jkaberg/hass-byd-vehicle`:
   - battery: `sensor.<prefix>_elec_percent`
   - fuel: `sensor.<prefix>_oil_percent`
@@ -328,6 +331,13 @@ What it shows:
 - Catalan (`Català`) language support in the editor
 - New vehicle profiles in selection grid: `ATTO 2`, `DOLPHIN SURF`, `TANG`
 - Live preview with the new `TANG` profile
+
+### 9.1) Hybrid profile support (`SEAL 5`)
+![Hybrid profile overview](docs/screenshots/19-hybrid-seal5-fuel-summary.png)
+
+What it shows:
+- Top strip behavior for hybrid profiles (`fuel %`, `battery %`, `range km`)
+- Fuel panel in summary with progress bar style aligned to battery bar structure
 
 ### 10) Charging cost popup (Hebrew)
 ![Charging cost popup Hebrew](docs/screenshots/16-charging-cost-popup-he.jpg)
