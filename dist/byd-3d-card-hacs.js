@@ -4,7 +4,7 @@
 
 const CARD_TYPE = "byd-3d-card";
 const CARD_NAME = "BYD 3D Card";
-const CARD_VERSION = "1.0.17";
+const CARD_VERSION = "1.0.18";
 const DEFAULT_ASSET_BASE_PATH = (() => {
   try {
     const base = new URL(".", import.meta.url).pathname;
@@ -1757,7 +1757,7 @@ class Byd3DCard extends HTMLElement {
 
     tracker.totalKwh = Math.max(0, tracker.totalKwh);
     if (changed) this._saveChargingMonthlyTracker(tracker);
-    return { monthKey: tracker.monthKey, totalKwh: tracker.totalKwh };
+    return { monthKey: tracker.monthKey, totalKwh: tracker.totalKwh, lastEnergyKwh: tracker.lastEnergyKwh };
   }
 
   _formatChargingPeriodLabel(monthKey) {
@@ -1859,14 +1859,21 @@ class Byd3DCard extends HTMLElement {
     const powerEstimatedKwh = this._estimatedEnergyFromPowerKwh(duration);
     const hasSensorEnergy = Number.isFinite(rawEnergyKwh);
     const monthlyEnergyKwh = Number.isFinite(monthly?.totalKwh) ? monthly.totalKwh : null;
+    const hasMonthlyEnergy = Number.isFinite(monthlyEnergyKwh) && (hasSensorEnergy || monthlyEnergyKwh > 0);
+    const cachedSensorEnergyKwh = Number.isFinite(monthly?.lastEnergyKwh) ? monthly.lastEnergyKwh : null;
+    const hasCachedSensorEnergy =
+      !hasSensorEnergy && !duration?.isCharging && Number.isFinite(cachedSensorEnergyKwh) && cachedSensorEnergyKwh > 0;
     let energyKwh = null;
     let energySource = "none";
-    if (mode === "monthly" && hasSensorEnergy) {
+    if (mode === "monthly" && hasMonthlyEnergy) {
       energyKwh = monthlyEnergyKwh;
-      energySource = "sensor_monthly";
+      energySource = hasSensorEnergy ? "sensor_monthly" : "sensor_monthly_cached";
     } else if (mode !== "monthly" && hasSensorEnergy) {
       energyKwh = rawEnergyKwh;
       energySource = "sensor";
+    } else if (mode !== "monthly" && hasCachedSensorEnergy) {
+      energyKwh = cachedSensorEnergyKwh;
+      energySource = "sensor_cached";
     } else if (Number.isFinite(powerEstimatedKwh)) {
       energyKwh = powerEstimatedKwh;
       energySource = "power_estimate";
