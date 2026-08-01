@@ -79,7 +79,7 @@ Check these quickly:
    - Manual install: `/config/www/byd-card/byd-3d-card.js`
    - HACS install: `/config/www/community/<repository-name>/byd-3d-card-hacs.js`
 4. If browser/app cache is stale, add a version query:
-   - `/hacsfiles/<repository-name>/byd-3d-card-hacs.js?v=1.0.17`
+   - `/hacsfiles/<repository-name>/byd-3d-card-hacs.js?v=1.0.20`
 5. Then hard refresh the browser/app again.
 
 ## Basic YAML

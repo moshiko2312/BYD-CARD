@@ -4,7 +4,7 @@
 
 const CARD_TYPE = "byd-3d-card";
 const CARD_NAME = "BYD 3D Card";
-const CARD_VERSION = "1.0.18";
+const CARD_VERSION = "1.0.20";
 const DEFAULT_ASSET_BASE_PATH = (() => {
   try {
     const base = new URL(".", import.meta.url).pathname;
@@ -4916,7 +4916,12 @@ class Byd3DCard extends HTMLElement {
           .custom-entity-btn { min-height: 50px; font-size: 13px; }
           .custom-actions-dialog-subtitle { font-size: 12px; }
           .seat-level { min-height: 30px; font-size: 13px; }
-          .climate-btn { min-height: 30px; font-size: 13px; }
+          .climate-btn[data-climate-action] {
+            box-sizing: border-box;
+            min-height: 44px;
+            padding: 6px 8px;
+            font-size: 14px;
+          }
           .target-box { min-height: 30px; }
           .target-box span { font-size: 12px; }
           .target-box strong { font-size: 16px; }
@@ -4933,7 +4938,12 @@ class Byd3DCard extends HTMLElement {
           .seat-grid { grid-template-columns: 1fr; }
           .vehicle-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
           .climate-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .climate-metrics .metric { min-height: 64px; }
+          .climate-metrics .metric {
+            min-height: 52px;
+            padding: 5px 7px;
+          }
+          .climate-metrics .metric label { font-size: 12px; }
+          .climate-metrics .metric strong { font-size: 17px; }
           .climate-row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
           .climate-row-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           .map-dialog-card {
@@ -7069,7 +7079,7 @@ function registerBydCard() {
       name: CARD_NAME,
       preview: false,
       description: "Dynamic 3D BYD dashboard card with vehicle profiles.",
-      documentationURL: "https://github.com/jkaberg/hass-byd-vehicle",
+      documentationURL: "https://github.com/moshiko2312/BYD-CARD",
     });
   }
 
