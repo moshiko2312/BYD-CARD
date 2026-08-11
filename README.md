@@ -31,6 +31,8 @@ Recommended order:
 - Languages: Hebrew, English, Russian, French, Catalan
 - Local profile images from `pic/`
 - External actions: choose multiple entities from Home Assistant and trigger them from a hero popup
+- Trunk control: hero icon color reflects open/closed state, with a Yes/No confirmation popup before opening or closing (opt-in via editor toggle)
+- Vehicle shutdown control: hero icon with a Yes/No confirmation popup before shutting down the vehicle (opt-in via editor toggle)
 - Optional unlock PIN protection with numeric keypad popup (`Enter` to confirm)
 - Charging cost popup with configurable `cost per kWh`
 - Charging consumption mode selector:
@@ -99,6 +101,8 @@ show_location: true
 show_charging_cost: true
 charging_cost_per_kwh: 0.63
 charging_cost_mode: monthly
+show_trunk_button: true
+show_shutdown_button: true
 require_unlock_pin: false
 unlock_pin_code: ""
 tire_pressure_unit: psi
@@ -140,6 +144,21 @@ Charging cost options:
 - `charging_cost_mode`:
   - `monthly`: tracks monthly consumed charging energy internally and resets at a new month.
   - `sensor`: uses current charging-energy sensor value directly.
+
+Trunk & vehicle shutdown options:
+- `show_trunk_button`: shows/hides the trunk icon on the hero image. Requires `button.<prefix>_open_trunk` and/or `button.<prefix>_close_trunk`, plus a binary sensor for trunk state (auto-detected as `binary_sensor.<prefix>_trunk` or `binary_sensor.<prefix>_trunk_lid`) to color the icon and pick the correct confirmation text. If the state entity is missing, the icon does not appear.
+- `show_shutdown_button`: shows/hides the vehicle shutdown icon on the hero image. Requires `button.<prefix>_shutdown_vehicle`.
+- Both icons open a Yes/No confirmation popup before sending the command (same pattern as unlock).
+- Some BYD integration versions ship these entities disabled by default (`entity_registry_enabled_default: False`). If an icon does not show up even with the toggle on, check Home Assistant → Settings → Devices & services → Entities → filter by "Disabled" and enable the relevant entity.
+- If your entities use a different suffix, override manually in YAML:
+
+```yaml
+entities:
+  trunk_lid: binary_sensor.byd_atto_3_trunk
+  open_trunk: button.byd_atto_3_open_trunk
+  close_trunk: button.byd_atto_3_close_trunk
+  shutdown_vehicle: button.byd_atto_3_shutdown_vehicle
+```
 
 Hybrid behavior:
 - Hybrid fuel in top strip and summary panel is shown only for hybrid profiles (`seal5`, `tang`).

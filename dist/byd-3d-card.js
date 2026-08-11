@@ -239,6 +239,10 @@ const ENTITY_HINTS = {
   flash_lights: { domains: ["button"], suffixes: ["flash_lights"] },
   find_car: { domains: ["button"], suffixes: ["find_car"] },
   close_windows: { domains: ["button"], suffixes: ["close_windows"] },
+  trunk_lid: { domains: ["binary_sensor"], suffixes: ["trunk", "trunk_lid"] },
+  open_trunk: { domains: ["button"], suffixes: ["open_trunk"] },
+  close_trunk: { domains: ["button"], suffixes: ["close_trunk"] },
+  shutdown_vehicle: { domains: ["button"], suffixes: ["shutdown_vehicle"] },
   driver_seat_heat: { domains: ["select"], suffixes: ["driver_seat_heat", "driver_seat_heating", "driver_seat_ventilation"] },
   driver_seat_ventilation: { domains: ["select"], suffixes: ["driver_seat_ventilation"] },
   passenger_seat_heat: {
@@ -282,6 +286,8 @@ const DEFAULT_CONFIG = {
   unlock_pin_code: "",
   show_external_entities: true,
   show_charging_cost: false,
+  show_trunk_button: false,
+  show_shutdown_button: false,
   charging_cost_per_kwh: 0,
   charging_cost_per_kwh_ac: 0,
   charging_cost_per_kwh_dc: 0,
@@ -409,6 +415,9 @@ const FALLBACK_I18N = {
   flash_lights: "הבהוב אורות",
   find_car: "מצא רכב",
   close_windows: "סגור חלונות",
+  open_trunk: "פתח תא מטען",
+  close_trunk: "סגור תא מטען",
+  shutdown_vehicle: "כבה רכב",
   open_map: "פתח מפה",
   close: "סגור",
   map_dialog_title: "מיקום רכב",
@@ -466,6 +475,8 @@ const FALLBACK_I18N = {
   settings_show_vehicle: "הצג רכב",
   settings_show_location: "הצג מיקום",
   settings_show_charging_cost: "הצג עלות טעינה",
+  settings_show_trunk_button: "הצג כפתור תא מטען",
+  settings_show_shutdown_button: "הצג כפתור כיבוי רכב",
   settings_charging_cost_per_kwh: "מחיר לקוט״ש",
   settings_charging_cost_per_kwh_hint: "הערך משמש לחישוב עלות הטעינה לפי אנרגיה נצרכת",
   settings_charging_cost_per_kwh_ac: "מחיר לקוט״ש בטעינת AC",
@@ -538,6 +549,9 @@ const FALLBACK_I18N = {
   comfort_21: "נוחות 21°",
   alert_header: "התראת רכב",
   confirm_unlock: "האם אתה בטוח שברצונך לפתוח את הרכב?",
+  confirm_open_trunk: "האם אתה בטוח שברצונך לפתוח את תא המטען?",
+  confirm_close_trunk: "האם אתה בטוח שברצונך לסגור את תא המטען?",
+  confirm_shutdown_vehicle: "האם אתה בטוח שברצונך לכבות את הרכב?",
   unlock_pin_placeholder: "הזן PIN",
   unlock_pin_clear: "ניקוי",
   unlock_pin_enter: "Enter",
@@ -689,6 +703,14 @@ function normalizeChargingCostEnabled(value) {
   return value === true;
 }
 
+function normalizeTrunkButtonEnabled(value) {
+  return value === true;
+}
+
+function normalizeShutdownButtonEnabled(value) {
+  return value === true;
+}
+
 function normalizeChargingCostPerKwh(value) {
   if (value === null || value === undefined) return 0;
   const normalizedRaw = String(value).trim().replace(",", ".");
@@ -826,6 +848,8 @@ class Byd3DCard extends HTMLElement {
     this._config.show_seat_cooling = this._config.seat_passenger_mode === "cool";
     this._config.show_external_entities = normalizeExternalEntitiesEnabled(this._config.show_external_entities);
     this._config.show_charging_cost = normalizeChargingCostEnabled(this._config.show_charging_cost);
+    this._config.show_trunk_button = normalizeTrunkButtonEnabled(this._config.show_trunk_button);
+    this._config.show_shutdown_button = normalizeShutdownButtonEnabled(this._config.show_shutdown_button);
     this._config.charging_cost_per_kwh = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh);
     this._config.charging_cost_per_kwh_ac = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_ac);
     this._config.charging_cost_per_kwh_dc = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_dc);
@@ -1556,6 +1580,14 @@ class Byd3DCard extends HTMLElement {
     return normalizeChargingCostEnabled(this._config?.show_charging_cost);
   }
 
+  _isTrunkButtonVisible() {
+    return normalizeTrunkButtonEnabled(this._config?.show_trunk_button);
+  }
+
+  _isShutdownButtonVisible() {
+    return normalizeShutdownButtonEnabled(this._config?.show_shutdown_button);
+  }
+
   _chargingCostPerKwh() {
     return normalizeChargingCostPerKwh(this._config?.charging_cost_per_kwh);
   }
@@ -2010,20 +2042,31 @@ class Byd3DCard extends HTMLElement {
     this._setConfirmationPinValue(`${current}${key}`, "");
   }
 
-  _submitConfirmationUnlock() {
+  _submitConfirmation() {
     if (!this._confirmation) return;
-    if (this._confirmation.type !== "unlock" && this._confirmation.type !== "unlock_entity") return;
-    const pinValue = this._confirmation.pinValue || "";
-    const pinValidation = this._validateUnlockPin(pinValue);
-    if (!pinValidation.ok) {
-      this._setConfirmationPinValue(pinValue, pinValidation.error);
-      return;
+    const type = this._confirmation.type;
+    const isUnlockType = type === "unlock" || type === "unlock_entity";
+    if (isUnlockType) {
+      const pinValue = this._confirmation.pinValue || "";
+      const pinValidation = this._validateUnlockPin(pinValue);
+      if (!pinValidation.ok) {
+        this._setConfirmationPinValue(pinValue, pinValidation.error);
+        return;
+      }
     }
-    if (this._confirmation.type === "unlock") {
+    if (type === "unlock") {
       this._callLock(this._confirmation.key, true);
-    } else if (this._confirmation.type === "unlock_entity" && this._confirmation.entityId && this._hass) {
+    } else if (type === "unlock_entity" && this._confirmation.entityId && this._hass) {
       this._hass.callService("lock", "unlock", { entity_id: this._confirmation.entityId });
       this._schedulePostActionRefresh();
+    } else if (type === "trunk_open") {
+      this._callButton("open_trunk");
+    } else if (type === "trunk_close") {
+      this._callButton("close_trunk");
+    } else if (type === "shutdown_vehicle") {
+      this._callButton("shutdown_vehicle");
+    } else {
+      return;
     }
     this._hideConfirmation();
   }
@@ -2846,6 +2889,24 @@ class Byd3DCard extends HTMLElement {
         </div>
       `
       : "";
+    const trunkLidState = this._state("trunk_lid")?.state;
+    const isTrunkOpen = trunkLidState === "on";
+    const heroTrunkBadge =
+      this._isTrunkButtonVisible() && trunkLidState && (this._resolveEntity("open_trunk") || this._resolveEntity("close_trunk"))
+        ? `
+        <div class="hero-trunk-badge actionable ${isTrunkOpen ? "trunk-open" : "trunk-closed"}" title="${isTrunkOpen ? this._t("close_trunk") : this._t("open_trunk")}" data-hero-trunk>
+          <ha-icon icon="mdi:car-back"></ha-icon>
+        </div>
+      `
+        : "";
+    const heroShutdownBadge =
+      this._isShutdownButtonVisible() && this._resolveEntity("shutdown_vehicle")
+        ? `
+        <div class="hero-shutdown-badge actionable warn" title="${this._t("shutdown_vehicle")}" data-hero-shutdown>
+          <ha-icon icon="mdi:power"></ha-icon>
+        </div>
+      `
+        : "";
     const serviceOverlay = visibleServiceIndicators.length
       ? `
         <div class="hero-services-grid">
@@ -3054,12 +3115,20 @@ class Byd3DCard extends HTMLElement {
     const unlockPinRawValue = normalizeUnlockPinCode(this._confirmation?.pinValue || "");
     const unlockPinMaskedValue = escapeHtml(unlockPinRawValue.replace(/\d/g, "•"));
     const unlockPinError = this._confirmation?.pinError || "";
+    const CONFIRMATION_COPY = {
+      unlock: { title: "unlock", text: "confirm_unlock", confirm: "unlock" },
+      unlock_entity: { title: "unlock", text: "confirm_unlock", confirm: "unlock" },
+      trunk_open: { title: "open_trunk", text: "confirm_open_trunk", confirm: "open_trunk" },
+      trunk_close: { title: "close_trunk", text: "confirm_close_trunk", confirm: "close_trunk" },
+      shutdown_vehicle: { title: "shutdown_vehicle", text: "confirm_shutdown_vehicle", confirm: "shutdown_vehicle" },
+    };
+    const confirmationCopy = CONFIRMATION_COPY[this._confirmation?.type] || CONFIRMATION_COPY.unlock;
     const confirmationOverlay = this._confirmation
       ? `
         <div class="dialog-backdrop" data-dialog-backdrop>
           <div class="dialog-card">
-            <div class="dialog-title">${this._t("unlock")}</div>
-            <div class="dialog-text">${this._t("confirm_unlock")}</div>
+            <div class="dialog-title">${this._t(confirmationCopy.title)}</div>
+            <div class="dialog-text">${this._t(confirmationCopy.text)}</div>
             ${
               pinRequired
                 ? `
@@ -3089,7 +3158,7 @@ class Byd3DCard extends HTMLElement {
             }
             <div class="dialog-actions">
               <button class="dialog-btn cancel" data-dialog-action="cancel">${this._t("no")}</button>
-              <button class="dialog-btn confirm" data-dialog-action="confirm">${this._t("unlock")}</button>
+              <button class="dialog-btn confirm" data-dialog-action="confirm">${this._t(confirmationCopy.confirm)}</button>
             </div>
           </div>
         </div>
@@ -3226,9 +3295,13 @@ class Byd3DCard extends HTMLElement {
             <div class="hero-overlay">
               ${heroHybridOverlay}
               ${serviceOverlay}
-              ${heroCustomBadge}
-              ${heroChargingCostBadge}
-              ${heroLockBadge}
+              <div class="hero-badge-row">
+                ${heroCustomBadge}
+                ${heroChargingCostBadge}
+                ${heroTrunkBadge}
+                ${heroShutdownBadge}
+                ${heroLockBadge}
+              </div>
             </div>
           </div>
 
@@ -3420,19 +3493,35 @@ class Byd3DCard extends HTMLElement {
           margin-left: 2px;
           font-variant-numeric: tabular-nums;
         }
-        .hero-lock-badge {
+        .hero-badge-row {
           position: absolute;
-          right: 12px;
+          left: 0;
+          right: 0;
           bottom: 12px;
+          display: flex;
+          direction: ltr;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+          padding: 0 12px;
+        }
+        .hero-lock-badge,
+        .hero-custom-badge,
+        .hero-cost-badge,
+        .hero-trunk-badge,
+        .hero-shutdown-badge {
           width: 40px;
           height: 40px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid rgba(255,255,255,.14);
           background: rgba(5,9,14,.88);
-          box-shadow: 0 0 18px rgba(0,0,0,.35);
+          box-shadow: 0 0 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.1);
+        }
+        .hero-lock-badge {
+          border: 1px solid rgba(255,255,255,.14);
         }
         .hero-lock-badge.ok {
           border-color: rgba(107, 230, 156, .5);
@@ -3459,18 +3548,7 @@ class Byd3DCard extends HTMLElement {
           color: #fff;
         }
         .hero-custom-badge {
-          position: absolute;
-          left: 12px;
-          bottom: 12px;
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
           border: 1px solid rgba(126,198,241,.48);
-          background: rgba(5,9,14,.88);
-          box-shadow: 0 0 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.1);
         }
         .hero-custom-badge.actionable {
           cursor: pointer;
@@ -3488,25 +3566,13 @@ class Byd3DCard extends HTMLElement {
           color: #d9ecff;
         }
         .hero-cost-badge {
-          position: absolute;
-          left: 50%;
-          bottom: 12px;
-          transform: translateX(-50%);
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
           border: 1px solid rgba(123, 210, 148, .62);
-          background: rgba(5,9,14,.88);
-          box-shadow: 0 0 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.1);
         }
         .hero-cost-badge.actionable {
           cursor: pointer;
         }
         .hero-cost-badge.actionable:active {
-          transform: translateX(-50%) scale(.96);
+          transform: scale(.96);
         }
         .hero-cost-badge ha-icon {
           display: flex;
@@ -3516,6 +3582,54 @@ class Byd3DCard extends HTMLElement {
           height: 20px;
           --mdc-icon-size: 20px;
           color: #d9ffea;
+        }
+        .hero-trunk-badge {
+          border: 1px solid rgba(255,255,255,.14);
+        }
+        .hero-trunk-badge.trunk-open {
+          border-color: rgba(107, 230, 156, .65);
+        }
+        .hero-trunk-badge.trunk-open ha-icon {
+          color: #8ef0b5;
+        }
+        .hero-trunk-badge.trunk-closed {
+          border-color: rgba(255, 90, 90, .65);
+        }
+        .hero-trunk-badge.trunk-closed ha-icon {
+          color: #ff9b9b;
+        }
+        .hero-trunk-badge.actionable {
+          cursor: pointer;
+        }
+        .hero-trunk-badge.actionable:active {
+          transform: scale(.96);
+        }
+        .hero-trunk-badge ha-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+          --mdc-icon-size: 20px;
+          color: #fff;
+        }
+        .hero-shutdown-badge {
+          border: 1px solid rgba(255, 107, 107, .6);
+        }
+        .hero-shutdown-badge.actionable {
+          cursor: pointer;
+        }
+        .hero-shutdown-badge.actionable:active {
+          transform: scale(.96);
+        }
+        .hero-shutdown-badge ha-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+          --mdc-icon-size: 20px;
+          color: #ffb4b4;
         }
         .hero-service-item ha-icon {
           width: 20px;
@@ -4859,16 +4973,23 @@ class Byd3DCard extends HTMLElement {
           }
           .hero-custom-badge,
           .hero-lock-badge,
-          .hero-cost-badge {
+          .hero-cost-badge,
+          .hero-trunk-badge,
+          .hero-shutdown-badge {
             width: 36px;
             height: 36px;
           }
           .hero-custom-badge ha-icon,
           .hero-lock-badge ha-icon,
-          .hero-cost-badge ha-icon {
+          .hero-cost-badge ha-icon,
+          .hero-trunk-badge ha-icon,
+          .hero-shutdown-badge ha-icon {
             --mdc-icon-size: 18px;
             width: 18px;
             height: 18px;
+          }
+          .hero-badge-row {
+            gap: 7px;
           }
           .hero-hybrid-strip {
             top: 8px;
@@ -5078,6 +5199,21 @@ class Byd3DCard extends HTMLElement {
       });
     });
 
+    this.shadowRoot.querySelectorAll("[data-hero-trunk]").forEach((badge) => {
+      badge.addEventListener("click", () => {
+        this._flashButtonFeedback(badge);
+        const trunkLidState = this._state("trunk_lid")?.state;
+        this._showConfirmation(trunkLidState === "on" ? "trunk_close" : "trunk_open", {});
+      });
+    });
+
+    this.shadowRoot.querySelectorAll("[data-hero-shutdown]").forEach((badge) => {
+      badge.addEventListener("click", () => {
+        this._flashButtonFeedback(badge);
+        this._showConfirmation("shutdown_vehicle", {});
+      });
+    });
+
     this.shadowRoot.querySelectorAll("[data-dialog-backdrop]").forEach((backdrop) => {
       backdrop.addEventListener("click", (event) => {
         if (event.target === backdrop) this._hideConfirmation();
@@ -5110,7 +5246,7 @@ class Byd3DCard extends HTMLElement {
           return;
         }
         if (action === "confirm") {
-          this._submitConfirmationUnlock();
+          this._submitConfirmation();
         }
       });
     });
@@ -5120,7 +5256,7 @@ class Byd3DCard extends HTMLElement {
         const key = btn.getAttribute("data-pin-key");
         if (!key) return;
         if (key === "enter") {
-          this._submitConfirmationUnlock();
+          this._submitConfirmation();
           return;
         }
         this._applyConfirmationPinKey(key);
@@ -5188,6 +5324,8 @@ class Byd3DCardEditor extends HTMLElement {
     this._config.show_seat_cooling = this._config.seat_passenger_mode === "cool";
     this._config.show_external_entities = normalizeExternalEntitiesEnabled(this._config.show_external_entities);
     this._config.show_charging_cost = normalizeChargingCostEnabled(this._config.show_charging_cost);
+    this._config.show_trunk_button = normalizeTrunkButtonEnabled(this._config.show_trunk_button);
+    this._config.show_shutdown_button = normalizeShutdownButtonEnabled(this._config.show_shutdown_button);
     this._config.charging_cost_per_kwh = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh);
     this._config.charging_cost_per_kwh_ac = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_ac);
     this._config.charging_cost_per_kwh_dc = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_dc);
@@ -5803,6 +5941,8 @@ class Byd3DCardEditor extends HTMLElement {
   _emitChange(partial) {
     this._config = { ...this._config, ...partial };
     this._config.show_charging_cost = normalizeChargingCostEnabled(this._config.show_charging_cost);
+    this._config.show_trunk_button = normalizeTrunkButtonEnabled(this._config.show_trunk_button);
+    this._config.show_shutdown_button = normalizeShutdownButtonEnabled(this._config.show_shutdown_button);
     this._config.charging_cost_per_kwh = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh);
     this._config.charging_cost_per_kwh_ac = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_ac);
     this._config.charging_cost_per_kwh_dc = normalizeChargingCostPerKwh(this._config.charging_cost_per_kwh_dc);
@@ -6004,6 +6144,8 @@ class Byd3DCardEditor extends HTMLElement {
               <label class="toggle-chip"><input id="show_actions" type="checkbox" ${this._config.show_actions ? "checked" : ""}/> <span>${this._t("settings_show_actions")}</span></label>
               <label class="toggle-chip"><input id="show_location" type="checkbox" ${this._config.show_location ? "checked" : ""}/> <span>${this._t("settings_show_location")}</span></label>
               <label class="toggle-chip"><input id="show_charging_cost" type="checkbox" ${normalizeChargingCostEnabled(this._config.show_charging_cost) ? "checked" : ""}/> <span>${this._t("settings_show_charging_cost")}</span></label>
+              <label class="toggle-chip"><input id="show_trunk_button" type="checkbox" ${normalizeTrunkButtonEnabled(this._config.show_trunk_button) ? "checked" : ""}/> <span>${this._t("settings_show_trunk_button")}</span></label>
+              <label class="toggle-chip"><input id="show_shutdown_button" type="checkbox" ${normalizeShutdownButtonEnabled(this._config.show_shutdown_button) ? "checked" : ""}/> <span>${this._t("settings_show_shutdown_button")}</span></label>
               <div class="field">
                 <label>${this._t("settings_charging_cost_per_kwh")}</label>
                 <input
@@ -6816,6 +6958,8 @@ class Byd3DCardEditor extends HTMLElement {
         show_actions: this.shadowRoot.getElementById("show_actions").checked,
         show_location: this.shadowRoot.getElementById("show_location").checked,
         show_charging_cost: normalizeChargingCostEnabled(this.shadowRoot.getElementById("show_charging_cost")?.checked),
+        show_trunk_button: normalizeTrunkButtonEnabled(this.shadowRoot.getElementById("show_trunk_button")?.checked),
+        show_shutdown_button: normalizeShutdownButtonEnabled(this.shadowRoot.getElementById("show_shutdown_button")?.checked),
         charging_cost_per_kwh: normalizeChargingCostPerKwh(this.shadowRoot.getElementById("charging_cost_per_kwh")?.value),
         charging_cost_per_kwh_ac: normalizeChargingCostPerKwh(
           this.shadowRoot.getElementById("charging_cost_per_kwh_ac")?.value
@@ -6883,6 +7027,8 @@ class Byd3DCardEditor extends HTMLElement {
     bindChange("show_actions");
     bindChange("show_location");
     bindChange("show_charging_cost");
+    bindChange("show_trunk_button");
+    bindChange("show_shutdown_button");
     bindChange("charging_cost_per_kwh");
     bindChange("charging_cost_per_kwh_ac");
     bindChange("charging_cost_per_kwh_dc");
