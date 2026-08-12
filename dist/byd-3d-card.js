@@ -2870,7 +2870,7 @@ class Byd3DCard extends HTMLElement {
     })();
     const heroLockBadge = lockState
       ? `
-        <div class="hero-lock-badge actionable ${lockState.state === "unlocked" || lockState.state === "on" ? "warn" : "ok"}" title="${this._boolLabel(lockState.state)}" data-key="lock">
+        <div class="hero-lock-badge actionable ${lockState.state === "unlocked" || lockState.state === "on" ? "unlocked" : "locked"}" title="${this._boolLabel(lockState.state)}" data-key="lock">
           <ha-icon icon="${lockState.state === "unlocked" || lockState.state === "on" ? "mdi:lock-open-variant-outline" : "mdi:lock"}"></ha-icon>
         </div>
       `
@@ -2899,10 +2899,11 @@ class Byd3DCard extends HTMLElement {
         </div>
       `
         : "";
+    const isVehicleActive = climateIsOn || (toNumber(speedState?.state) ?? 0) > 0;
     const heroShutdownBadge =
       this._isShutdownButtonVisible() && this._resolveEntity("shutdown_vehicle")
         ? `
-        <div class="hero-shutdown-badge actionable warn" title="${this._t("shutdown_vehicle")}" data-hero-shutdown>
+        <div class="hero-shutdown-badge actionable ${isVehicleActive ? "vehicle-on" : "vehicle-off"}" title="${this._t("shutdown_vehicle")}" data-hero-shutdown>
           <ha-icon icon="mdi:power"></ha-icon>
         </div>
       `
@@ -3523,11 +3524,17 @@ class Byd3DCard extends HTMLElement {
         .hero-lock-badge {
           border: 1px solid rgba(255,255,255,.14);
         }
-        .hero-lock-badge.ok {
-          border-color: rgba(107, 230, 156, .5);
+        .hero-lock-badge.unlocked {
+          border-color: rgba(107, 230, 156, .65);
         }
-        .hero-lock-badge.warn {
-          border-color: rgba(255, 146, 100, .6);
+        .hero-lock-badge.unlocked ha-icon {
+          color: #8ef0b5;
+        }
+        .hero-lock-badge.locked {
+          border-color: rgba(255, 90, 90, .65);
+        }
+        .hero-lock-badge.locked ha-icon {
+          color: #ff9b9b;
         }
         .hero-lock-badge.actionable {
           cursor: pointer;
@@ -3566,7 +3573,7 @@ class Byd3DCard extends HTMLElement {
           color: #d9ecff;
         }
         .hero-cost-badge {
-          border: 1px solid rgba(123, 210, 148, .62);
+          border: 1px solid rgba(126,198,241,.48);
         }
         .hero-cost-badge.actionable {
           cursor: pointer;
@@ -3581,7 +3588,7 @@ class Byd3DCard extends HTMLElement {
           width: 20px;
           height: 20px;
           --mdc-icon-size: 20px;
-          color: #d9ffea;
+          color: #d9ecff;
         }
         .hero-trunk-badge {
           border: 1px solid rgba(255,255,255,.14);
@@ -3614,7 +3621,19 @@ class Byd3DCard extends HTMLElement {
           color: #fff;
         }
         .hero-shutdown-badge {
-          border: 1px solid rgba(255, 107, 107, .6);
+          border: 1px solid rgba(255,255,255,.14);
+        }
+        .hero-shutdown-badge.vehicle-on {
+          border-color: rgba(107, 230, 156, .65);
+        }
+        .hero-shutdown-badge.vehicle-on ha-icon {
+          color: #8ef0b5;
+        }
+        .hero-shutdown-badge.vehicle-off {
+          border-color: rgba(255, 90, 90, .65);
+        }
+        .hero-shutdown-badge.vehicle-off ha-icon {
+          color: #ff9b9b;
         }
         .hero-shutdown-badge.actionable {
           cursor: pointer;
@@ -3629,7 +3648,7 @@ class Byd3DCard extends HTMLElement {
           width: 20px;
           height: 20px;
           --mdc-icon-size: 20px;
-          color: #ffb4b4;
+          color: #fff;
         }
         .hero-service-item ha-icon {
           width: 20px;

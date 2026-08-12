@@ -146,9 +146,11 @@ Charging cost options:
   - `sensor`: uses current charging-energy sensor value directly.
 
 Trunk & vehicle shutdown options:
-- `show_trunk_button`: shows/hides the trunk icon on the hero image. Requires `button.<prefix>_open_trunk` and/or `button.<prefix>_close_trunk`, plus a binary sensor for trunk state (auto-detected as `binary_sensor.<prefix>_trunk` or `binary_sensor.<prefix>_trunk_lid`) to color the icon and pick the correct confirmation text. If the state entity is missing, the icon does not appear.
-- `show_shutdown_button`: shows/hides the vehicle shutdown icon on the hero image. Requires `button.<prefix>_shutdown_vehicle`.
+- `show_trunk_button`: shows/hides the trunk icon on the hero image. Requires `button.<prefix>_open_trunk` and/or `button.<prefix>_close_trunk`, plus a binary sensor for trunk state (auto-detected as `binary_sensor.<prefix>_trunk` or `binary_sensor.<prefix>_trunk_lid`) to color the icon and pick the correct confirmation text. If the state entity is missing, the icon does not appear. Icon is red when the trunk is closed, green when open.
+- `show_shutdown_button`: shows/hides the vehicle shutdown icon on the hero image. Requires `button.<prefix>_shutdown_vehicle`. Icon color reflects whether the vehicle looks active (climate/AC on, or speed > 0): green when active, red when idle.
 - Both icons open a Yes/No confirmation popup before sending the command (same pattern as unlock).
+- The lock icon uses the same red/green convention: red when locked, green when unlocked.
+- The external actions ("scenarios") and charging cost icons are always a fixed, subtle blue — they are shortcuts, not state indicators.
 - Some BYD integration versions ship these entities disabled by default (`entity_registry_enabled_default: False`). If an icon does not show up even with the toggle on, check Home Assistant → Settings → Devices & services → Entities → filter by "Disabled" and enable the relevant entity.
 - If your entities use a different suffix, override manually in YAML:
 
