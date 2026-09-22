@@ -28,7 +28,7 @@ Recommended order:
   - `Quick actions`
 - Drag & drop category order in UI editor
 - Last selected category is remembered after refresh
-- Languages: Hebrew, English, Russian, French, Catalan
+- Languages: Hebrew, English, Russian, French, Catalan, Spanish
 - Local profile images from `pic/`
 - External actions: choose multiple entities from Home Assistant and trigger them from a hero popup
 - Trunk control: hero icon color reflects open/closed state, with a Yes/No confirmation popup before opening or closing (opt-in via editor toggle)
