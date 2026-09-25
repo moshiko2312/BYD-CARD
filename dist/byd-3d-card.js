@@ -166,6 +166,11 @@ const VEHICLE_PROFILES = {
     image: PROFILE_IMAGES.sealion7,
     icon: "mdi:car-estate",
   },
+  song_pro_dm_i: {
+    label: "BYD SONG PRO DM-i",
+    image: PROFILE_IMAGES.sealion7,
+    icon: "mdi:car-estate",
+  },
 };
 
 const PROFILE_DEFAULTS = {
@@ -177,9 +182,10 @@ const PROFILE_DEFAULTS = {
   seal5: { title: "BYD SEAL 5", entity_prefix: "byd_seal_5" },
   dolphin_surf: { title: "BYD DOLPHIN SURF", entity_prefix: "byd_dolphin_surf" },
   tang: { title: "BYD TANG", entity_prefix: "byd_tang" },
+  song_pro_dm_i: { title: "BYD SONG PRO DM-i", entity_prefix: "song_pro_dm_i" },
 };
 
-const HYBRID_PROFILE_KEYS = new Set(["tang", "seal5"]);
+const HYBRID_PROFILE_KEYS = new Set(["tang", "seal5", "song_pro_dm_i"]);
 
 const ENTITY_HINTS = {
   battery: { domains: ["sensor"], suffixes: ["elec_percent", "battery_level"] },
@@ -1316,6 +1322,7 @@ class Byd3DCard extends HTMLElement {
       seal5: `${basePath}/byd_seal.png`,
       dolphin_surf: `${basePath}/dolphin_surf.png`,
       tang: `${basePath}/TANG.png`,
+      song_pro_dm_i: `${basePath}/song_pro.png`,
     };
     return localMap[profileKey] || null;
   }
@@ -5544,6 +5551,7 @@ class Byd3DCardEditor extends HTMLElement {
           seal5: `${basePath}/byd_seal.png`,
           dolphin_surf: `${basePath}/dolphin_surf.png`,
           tang: `${basePath}/TANG.png`,
+          song_pro_dm_i: `${basePath}/song_pro.png`,
         };
         const localImage = localImages[key] || profile.image;
         return `
