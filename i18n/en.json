@@ -192,5 +192,6 @@
   "charging_type_value": "Charging type",
   "settings_charging_type_infer_from_power": "Infer AC/DC from charging power",
   "settings_charging_type_power_ac_min_w": "Normal charging lower threshold (W)",
-  "settings_charging_type_power_ac_max_w": "Normal charging upper threshold (W)"
+  "settings_charging_type_power_ac_max_w": "Normal charging upper threshold (W)",
+  "charging_duration_value": "Charging duration"
 }

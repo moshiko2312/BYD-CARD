@@ -99,6 +99,7 @@
   "unlock_pin_required": "נא להזין קוד PIN.",
   "unlock_pin_incorrect": "קוד PIN שגוי.",
   "unlock_pin_not_configured": "לא הוגדר קוד PIN תקין בהגדרות הכרטיס.",
+  "executed": "בוצע",
   "alert_more": "תקלות נוספות",
   "alert_tire_pressure_low": "לחץ אוויר נמוך",
   "alert_tire_pressure_critical": "לחץ אוויר קריטי",
@@ -183,7 +184,6 @@
   "settings_category_order": "סדר קטגוריות",
   "settings_category_order_hint": "גרור ושחרר כדי לשנות את הסדר בכפתורי הקטגוריות",
   "settings_show_seat_cooling": "הצג קירור מושבים",
-  "executed": "בוצע",
   "settings_charging_cost_per_kwh_ac": "מחיר לקוט״ש בטעינת AC",
   "settings_charging_cost_per_kwh_dc": "מחיר לקוט״ש בטעינת DC",
   "settings_charging_type_default": "סוג טעינה כברירת מחדל",
@@ -192,5 +192,6 @@
   "charging_type_value": "סוג טעינה",
   "settings_charging_type_infer_from_power": "זיהוי AC/DC לפי הספק טעינה",
   "settings_charging_type_power_ac_min_w": "סף תחתון לטעינה רגילה (W)",
-  "settings_charging_type_power_ac_max_w": "סף עליון לטעינה רגילה (W)"
+  "settings_charging_type_power_ac_max_w": "סף עליון לטעינה רגילה (W)",
+  "charging_duration_value": "משך טעינה"
 }

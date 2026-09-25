@@ -5563,6 +5563,7 @@ class Byd3DCardEditor extends HTMLElement {
       { key: "ru", label: "Русский", flag: "🇷🇺" },
       { key: "fr", label: "Français", flag: "🇫🇷" },
       { key: "ca", label: "Català", flag: "🇦🇩" },
+      { key: "es", label: "Español", flag: "🇪🇸" },
     ];
     return langs
       .map((lang) => {
