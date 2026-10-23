@@ -153,6 +153,248 @@ const PROFILE_IMAGES = {
   <text x="74" y="92" fill="#ecf4ff" font-size="48" font-family="ui-sans-serif,Arial" font-weight="700">BYD SEALION 7</text>
 </svg>
 `),
+  han:
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bghan" x1="0" x2="1">
+      <stop offset="0%" stop-color="#2a1f2d"/>
+      <stop offset="100%" stop-color="#0f0c13"/>
+    </linearGradient>
+    <linearGradient id="carhan" x1="0" x2="1">
+      <stop offset="0%" stop-color="#e22b38"/>
+      <stop offset="45%" stop-color="#a81924"/>
+      <stop offset="100%" stop-color="#5a0b12"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="520" fill="url(#bghan)"/>
+  <ellipse cx="600" cy="428" rx="440" ry="46" fill="rgba(0,0,0,0.38)"/>
+  <path d="M140 342c30-65 98-118 178-132l185-32c48-8 96-6 142 8l178 52c54 16 104 46 142 88l39 44-12 18H122l18-46z" fill="url(#carhan)"/>
+  <path d="M305 281l146-54c42-15 88-16 130-3l192 56c28 8 53 23 73 43H278z" fill="#140a10"/>
+  <path d="M360 274h470c12 0 22 10 22 22v6H338v-6c0-12 10-22 22-22z" fill="#2d131b"/>
+  <circle cx="340" cy="382" r="72" fill="#120c13"/>
+  <circle cx="340" cy="382" r="39" fill="#9da2aa"/>
+  <circle cx="862" cy="382" r="72" fill="#120c13"/>
+  <circle cx="862" cy="382" r="39" fill="#9da2aa"/>
+  <rect x="238" y="334" width="108" height="18" rx="9" fill="#ffccd1"/>
+  <rect x="874" y="334" width="86" height="18" rx="9" fill="#ff7a85"/>
+  <text x="74" y="92" fill="#ffebee" font-size="48" font-family="ui-sans-serif,Arial" font-weight="700">BYD HAN</text>
+</svg>
+`),
+  seal_u:
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bgsealu" x1="0" x2="1">
+      <stop offset="0%" stop-color="#1e2c3a"/>
+      <stop offset="100%" stop-color="#0c1219"/>
+    </linearGradient>
+    <linearGradient id="carsealu" x1="0" x2="1">
+      <stop offset="0%" stop-color="#f0f6fc"/>
+      <stop offset="50%" stop-color="#b4c8db"/>
+      <stop offset="100%" stop-color="#738da5"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="520" fill="url(#bgsealu)"/>
+  <ellipse cx="600" cy="430" rx="438" ry="48" fill="rgba(0,0,0,0.40)"/>
+  <path d="M152 338c22-68 85-120 166-136l176-35c44-9 89-7 132 5l194 56c52 15 98 46 132 90l34 45H136l16-25z" fill="url(#carsealu)"/>
+  <path d="M318 270l140-48c42-14 88-14 130 3l188 68c22 8 41 21 56 37H282z" fill="#182330"/>
+  <path d="M370 273h448c14 0 25 11 25 25v6H345v-6c0-14 11-25 25-25z" fill="#243447"/>
+  <circle cx="348" cy="384" r="73" fill="#101720"/>
+  <circle cx="348" cy="384" r="40" fill="#8ca0b5"/>
+  <circle cx="858" cy="384" r="73" fill="#101720"/>
+  <circle cx="858" cy="384" r="40" fill="#8ca0b5"/>
+  <rect x="242" y="332" width="102" height="18" rx="9" fill="#d2e4f7"/>
+  <rect x="866" y="332" width="84" height="18" rx="9" fill="#d2e4f7"/>
+  <text x="74" y="92" fill="#ebf4fc" font-size="48" font-family="ui-sans-serif,Arial" font-weight="700">BYD SEAL U</text>
+</svg>
+`),
+  seal_u_dmi:
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bgsealudmi" x1="0" x2="1">
+      <stop offset="0%" stop-color="#192a35"/>
+      <stop offset="100%" stop-color="#0a1217"/>
+    </linearGradient>
+    <linearGradient id="carsealudmi" x1="0" x2="1">
+      <stop offset="0%" stop-color="#eaf4fa"/>
+      <stop offset="50%" stop-color="#a9c6d9"/>
+      <stop offset="100%" stop-color="#6488a0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="520" fill="url(#bgsealudmi)"/>
+  <ellipse cx="600" cy="430" rx="438" ry="48" fill="rgba(0,0,0,0.40)"/>
+  <path d="M152 338c22-68 85-120 166-136l176-35c44-9 89-7 132 5l194 56c52 15 98 46 132 90l34 45H136l16-25z" fill="url(#carsealudmi)"/>
+  <path d="M318 270l140-48c42-14 88-14 130 3l188 68c22 8 41 21 56 37H282z" fill="#14212b"/>
+  <path d="M370 273h448c14 0 25 11 25 25v6H345v-6c0-14 11-25 25-25z" fill="#203342"/>
+  <line x1="172" y1="340" x2="238" y2="340" stroke="#48b4e0" stroke-width="3"/>
+  <line x1="178" y1="347" x2="232" y2="347" stroke="#48b4e0" stroke-width="2.5"/>
+  <circle cx="348" cy="384" r="73" fill="#0f171f"/>
+  <circle cx="348" cy="384" r="40" fill="#849db5"/>
+  <circle cx="858" cy="384" r="73" fill="#0f171f"/>
+  <circle cx="858" cy="384" r="40" fill="#849db5"/>
+  <rect x="242" y="332" width="102" height="18" rx="9" fill="#d2efff"/>
+  <rect x="866" y="332" width="84" height="18" rx="9" fill="#d2efff"/>
+  <text x="74" y="92" fill="#e5f5ff" font-size="48" font-family="ui-sans-serif,Arial" font-weight="700">BYD SEAL U DM-i</text>
+  <rect x="520" y="60" width="105" height="36" rx="6" fill="#1a8ec4"/>
+  <text x="532" y="85" fill="#ffffff" font-size="22" font-family="ui-sans-serif,Arial" font-weight="700">DM-i</text>
+</svg>
+`),
+  sealion5_dmi:
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bgsl5" x1="0" x2="1">
+      <stop offset="0%" stop-color="#242c38"/>
+      <stop offset="100%" stop-color="#0b1017"/>
+    </linearGradient>
+    <linearGradient id="carsl5" x1="0" x2="1">
+      <stop offset="0%" stop-color="#eef3f8"/>
+      <stop offset="50%" stop-color="#b6c3d4"/>
+      <stop offset="100%" stop-color="#73859d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="520" fill="url(#bgsl5)"/>
+  <ellipse cx="600" cy="428" rx="435" ry="47" fill="rgba(0,0,0,0.39)"/>
+  <path d="M156 339c23-66 86-117 167-133l178-34c43-8 87-6 130 6l190 56c53 16 100 48 134 92l32 44H140l16-31z" fill="url(#carsl5)"/>
+  <path d="M324 273l136-46c43-14 90-14 133 3l184 70c20 8 38 20 52 35H288z" fill="#192330"/>
+  <path d="M375 274h442c13 0 24 11 24 24v6H351v-6c0-13 11-24 24-24z" fill="#243446"/>
+  <circle cx="347" cy="385" r="72" fill="#111823"/>
+  <circle cx="347" cy="385" r="39" fill="#91a2b7"/>
+  <circle cx="859" cy="385" r="72" fill="#111823"/>
+  <circle cx="859" cy="385" r="39" fill="#91a2b7"/>
+  <rect x="245" y="333" width="98" height="18" rx="9" fill="#d9e9f9"/>
+  <rect x="864" y="333" width="82" height="18" rx="9" fill="#d9e9f9"/>
+  <text x="74" y="92" fill="#eaf3fb" font-size="48" font-family="ui-sans-serif,Arial" font-weight="700">BYD SEALION 5 DM-i</text>
+  <rect x="620" y="60" width="105" height="36" rx="6" fill="#1c8ec7"/>
+  <text x="632" y="85" fill="#ffffff" font-size="22" font-family="ui-sans-serif,Arial" font-weight="700">DM-i</text>
+</svg>
+`),
+  sealion6:
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bgsl6" x1="0" x2="1">
+      <stop offset="0%" stop-color="#28303d"/>
+      <stop offset="100%" stop-color="#0c1117"/>
+    </linearGradient>
+    <linearGradient id="carsl6" x1="0" x2="1">
+      <stop offset="0%" stop-color="#f2f6fb"/>
+      <stop offset="50%" stop-color="#bcc9dc"/>
+      <stop offset="100%" stop-color="#798ca7"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="520" fill="url(#bgsl6)"/>
+  <ellipse cx="600" cy="429" rx="440" ry="48" fill="rgba(0,0,0,0.40)"/>
+  <path d="M154 340c24-67 88-118 169-134l180-34c44-8 88-6 130 6l188 56c54 16 101 48 135 93l32 43H138l16-30z" fill="url(#carsl6)"/>
+  <path d="M326 274l134-45c43-15 91-14 134 4l182 71c20 8 37 20 51 34H290z" fill="#1b2533"/>
+  <path d="M378 274h440c14 0 25 11 25 24v6H353v-6c0-13 11-24 25-24z" fill="#26364a"/>
+  <circle cx="346" cy="386" r="72" fill="#121a24"/>
+  <circle cx="346" cy="386" r="39" fill="#93a5bc"/>
+  <circle cx="860" cy="386" r="72" fill="#121a24"/>
+  <circle cx="860" cy="386" r="39" fill="#93a5bc"/>
+  <rect x="244" y="334" width="98" height="18" rx="9" fill="#dceaff"/>
+  <rect x="864" y="334" width="82" height="18" rx="9" fill="#dceaff"/>
+  <text x="74" y="92" fill="#ecf4ff" font-size="48" font-family="ui-sans-serif,Arial" font-weight="700">BYD SEALION 6</text>
+  <rect x="500" y="60" width="105" height="36" rx="6" fill="#1c8ec7"/>
+  <text x="512" y="85" fill="#ffffff" font-size="22" font-family="ui-sans-serif,Arial" font-weight="700">DM-i</text>
+</svg>
+`),
+  m6:
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bgm6" x1="0" x2="1">
+      <stop offset="0%" stop-color="#233240"/>
+      <stop offset="100%" stop-color="#0e161f"/>
+    </linearGradient>
+    <linearGradient id="carm6" x1="0" x2="1">
+      <stop offset="0%" stop-color="#f5f8fc"/>
+      <stop offset="50%" stop-color="#c1d0e0"/>
+      <stop offset="100%" stop-color="#8397ad"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="520" fill="url(#bgm6)"/>
+  <ellipse cx="600" cy="430" rx="448" ry="48" fill="rgba(0,0,0,0.38)"/>
+  <path d="M148 340c20-72 78-126 156-144l212-38c46-8 93-5 138 9l176 54c48 15 90 44 122 84l42 55H130l18-20z" fill="url(#carm6)"/>
+  <path d="M312 268l164-50c44-13 90-11 133 5l172 63c25 9 46 25 61 45H274z" fill="#172432"/>
+  <path d="M366 272h458c14 0 25 11 25 24v6H341v-6c0-13 11-24 25-24z" fill="#24374b"/>
+  <circle cx="346" cy="385" r="72" fill="#101923"/>
+  <circle cx="346" cy="385" r="39" fill="#93a5bb"/>
+  <circle cx="862" cy="385" r="72" fill="#101923"/>
+  <circle cx="862" cy="385" r="39" fill="#93a5bb"/>
+  <rect x="238" y="333" width="104" height="18" rx="9" fill="#d8e7f8"/>
+  <rect x="868" y="333" width="84" height="18" rx="9" fill="#d8e7f8"/>
+  <text x="74" y="92" fill="#eff6ff" font-size="48" font-family="ui-sans-serif,Arial" font-weight="700">BYD M6</text>
+</svg>
+`),
+  seagull:
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bgseagull" x1="0" x2="1">
+      <stop offset="0%" stop-color="#2a382e"/>
+      <stop offset="100%" stop-color="#0f1611"/>
+    </linearGradient>
+    <linearGradient id="carseagull" x1="0" x2="1">
+      <stop offset="0%" stop-color="#d9f678"/>
+      <stop offset="50%" stop-color="#a6d944"/>
+      <stop offset="100%" stop-color="#6e9b21"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="520" fill="url(#bgseagull)"/>
+  <ellipse cx="600" cy="430" rx="390" ry="44" fill="rgba(0,0,0,0.36)"/>
+  <path d="M210 336c28-60 88-108 156-126l148-38c40-10 82-8 122 4l154 48c48 15 90 44 122 83l38 46H192l18-17z" fill="url(#carseagull)"/>
+  <path d="M344 274l120-42c34-12 72-12 106 1l172 60c22 8 41 20 56 35H312z" fill="#1b2518"/>
+  <circle cx="368" cy="384" r="67" fill="#121810"/>
+  <circle cx="368" cy="384" r="36" fill="#9db195"/>
+  <circle cx="832" cy="384" r="67" fill="#121810"/>
+  <circle cx="832" cy="384" r="36" fill="#9db195"/>
+  <polygon points="262,330 318,326 314,342 258,346" fill="#f4ffc2"/>
+  <polygon points="840,326 896,330 892,346 836,342" fill="#f4ffc2"/>
+  <text x="74" y="92" fill="#f4fbe8" font-size="48" font-family="ui-sans-serif,Arial" font-weight="700">BYD SEAGULL</text>
+</svg>
+`),
+  shark:
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bgshark" x1="0" x2="1">
+      <stop offset="0%" stop-color="#2d3036"/>
+      <stop offset="100%" stop-color="#0e1013"/>
+    </linearGradient>
+    <linearGradient id="carshark" x1="0" x2="1">
+      <stop offset="0%" stop-color="#e8edf2"/>
+      <stop offset="50%" stop-color="#a6b4c2"/>
+      <stop offset="100%" stop-color="#607080"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="520" fill="url(#bgshark)"/>
+  <ellipse cx="600" cy="432" rx="458" ry="46" fill="rgba(0,0,0,0.44)"/>
+  <path d="M142 344c18-70 76-124 150-140l180-28c40-6 80-4 120 6l118 30v-4h226v106l24 30H124l18-20z" fill="url(#carshark)"/>
+  <path d="M312 266l142-42c36-10 74-10 110 3l138 48c18 6 32 18 42 32H280z" fill="#14181d"/>
+  <line x1="330" y1="218" x2="680" y2="218" stroke="#374350" stroke-width="6" stroke-linecap="round"/>
+  <line x1="730" y1="264" x2="956" y2="264" stroke="#252d36" stroke-width="4"/>
+  <circle cx="344" cy="386" r="76" fill="#101317"/>
+  <circle cx="344" cy="386" r="42" fill="#8191a0"/>
+  <circle cx="866" cy="386" r="76" fill="#101317"/>
+  <circle cx="866" cy="386" r="42" fill="#8191a0"/>
+  <rect x="226" y="332" width="108" height="20" rx="4" fill="#dbe5ee"/>
+  <rect x="880" y="332" width="80" height="20" rx="4" fill="#ff7d85"/>
+  <text x="74" y="92" fill="#ecf2f8" font-size="48" font-family="ui-sans-serif,Arial" font-weight="700">BYD SHARK 6</text>
+  <rect x="490" y="60" width="105" height="36" rx="6" fill="#d97706"/>
+  <text x="502" y="85" fill="#ffffff" font-size="22" font-family="ui-sans-serif,Arial" font-weight="700">DMO</text>
+</svg>
+`),
 };
 
 const VEHICLE_PROFILES = {
@@ -201,6 +443,51 @@ const VEHICLE_PROFILES = {
     image: PROFILE_IMAGES.sealion7,
     icon: "mdi:car-estate",
   },
+  han: {
+    label: "BYD HAN",
+    image: PROFILE_IMAGES.han,
+    icon: "mdi:car-sports",
+  },
+  seal_u: {
+    label: "BYD SEAL U",
+    image: PROFILE_IMAGES.seal_u,
+    icon: "mdi:car-estate",
+  },
+  seal_u_dmi: {
+    label: "BYD SEAL U DM-i",
+    image: PROFILE_IMAGES.seal_u_dmi,
+    icon: "mdi:car-estate",
+  },
+  atto2_dmi: {
+    label: "BYD ATTO 2 DM-i",
+    image: PROFILE_IMAGES.atto3,
+    icon: "mdi:car-electric",
+  },
+  sealion5_dmi: {
+    label: "BYD SEALION 5 DM-i",
+    image: PROFILE_IMAGES.sealion5_dmi,
+    icon: "mdi:car-estate",
+  },
+  sealion6: {
+    label: "BYD SEALION 6",
+    image: PROFILE_IMAGES.sealion6,
+    icon: "mdi:car-estate",
+  },
+  m6: {
+    label: "BYD M6",
+    image: PROFILE_IMAGES.m6,
+    icon: "mdi:van-passenger",
+  },
+  seagull: {
+    label: "BYD SEAGULL",
+    image: PROFILE_IMAGES.seagull,
+    icon: "mdi:car-electric-outline",
+  },
+  shark: {
+    label: "BYD SHARK 6",
+    image: PROFILE_IMAGES.shark,
+    icon: "mdi:car-pickup",
+  },
 };
 
 const PROFILE_DEFAULTS = {
@@ -210,12 +497,29 @@ const PROFILE_DEFAULTS = {
   dolphin: { title: "BYD DOLPHIN", entity_prefix: "byd_dolphin" },
   sealion7: { title: "BYD SEALION 7", entity_prefix: "byd_sealion_7" },
   atto2: { title: "BYD ATTO 2", entity_prefix: "byd_atto_2" },
+  atto2_dmi: { title: "BYD ATTO 2 DM-i", entity_prefix: "byd_atto_2_dmi" },
   seal5: { title: "BYD SEAL 5", entity_prefix: "byd_seal_5" },
   dolphin_surf: { title: "BYD DOLPHIN SURF", entity_prefix: "byd_dolphin_surf" },
   tang: { title: "BYD TANG", entity_prefix: "byd_tang" },
+  han: { title: "BYD HAN", entity_prefix: "byd_han" },
+  seal_u: { title: "BYD SEAL U", entity_prefix: "byd_seal_u" },
+  seal_u_dmi: { title: "BYD SEAL U DM-i", entity_prefix: "byd_seal_u_dmi" },
+  sealion5_dmi: { title: "BYD SEALION 5 DM-i", entity_prefix: "byd_sealion_5_dmi" },
+  sealion6: { title: "BYD SEALION 6", entity_prefix: "byd_sealion_6" },
+  m6: { title: "BYD M6", entity_prefix: "byd_m6" },
+  seagull: { title: "BYD SEAGULL", entity_prefix: "byd_seagull" },
+  shark: { title: "BYD SHARK 6", entity_prefix: "byd_shark_6" },
 };
 
-const HYBRID_PROFILE_KEYS = new Set(["tang", "seal5"]);
+const HYBRID_PROFILE_KEYS = new Set([
+  "tang",
+  "seal5",
+  "atto2_dmi",
+  "seal_u_dmi",
+  "sealion5_dmi",
+  "sealion6",
+  "shark",
+]);
 
 const ENTITY_HINTS = {
   battery: {
@@ -1210,6 +1514,25 @@ const ALERT_I18N = {
     alert_srs: "SRS",
     alert_svs: "SVS",
   },
+  de: {
+    alert_header: "Fahrzeugwarnung",
+    alert_header_single: "Warnung im Fahrzeug",
+    alert_tire_pressure_low: "Reifendruck niedrig",
+    alert_tire_pressure_critical: "Kritischer Reifendruck",
+    alert_system_fault: "Systemfehler",
+    front_left: "Vorne links",
+    front_right: "Vorne rechts",
+    rear_left: "Hinten links",
+    rear_right: "Hinten rechts",
+    rapid_tire_leak: "Schneller Druckverlust",
+    alert_tpms: "TPMS",
+    alert_abs: "ABS",
+    alert_brake: "Bremse",
+    alert_steering: "Lenkung",
+    alert_charging: "Laden",
+    alert_srs: "SRS",
+    alert_svs: "SVS",
+  },
 };
 
 function clamp(value, min, max) {
@@ -1309,6 +1632,32 @@ function normalizeVehicleProfile(value) {
   if (!raw) return "atto3";
   if (VEHICLE_PROFILES[raw]) return raw;
   const canonical = raw.toLowerCase().replace(/^byd[\s_-]*/, "").replace(/[\s_-]+/g, "");
+
+  const aliases = {
+    atto2dmi: "atto2_dmi",
+    atto2dm: "atto2_dmi",
+    sealu: "seal_u",
+    sealudmi: "seal_u_dmi",
+    sealudm: "seal_u_dmi",
+    sealion5: "sealion5_dmi",
+    sealion05: "sealion5_dmi",
+    sealion5dmi: "sealion5_dmi",
+    sealion05dmi: "sealion5_dmi",
+    sealion6: "sealion6",
+    sealion6dmi: "sealion6",
+    dolphinmini: "seagull",
+    seagull: "seagull",
+    shark: "shark",
+    shark6: "shark",
+    sharkdmo: "shark",
+    hanev: "han",
+    handmi: "han",
+    han: "han",
+    m6: "m6",
+    bydm6: "m6",
+  };
+  if (aliases[canonical]) return aliases[canonical];
+
   for (const key of Object.keys(VEHICLE_PROFILES)) {
     const keyCanonical = key.toLowerCase().replace(/^byd[\s_-]*/, "").replace(/[\s_-]+/g, "");
     if (keyCanonical === canonical) {
@@ -1812,15 +2161,38 @@ class Byd3DCard extends HTMLElement {
     if (!this._hass || !this._hass.states || typeof this._hass.states !== "object") return "";
     const states = Object.keys(this._hass.states);
     const profile = normalizeVehicleProfile(this._config?.vehicle_profile);
-    const isAtto3Family = profile === "atto3" || profile === "atto3Evo";
     const batteryPattern = /_(battery_level|elec_percent|livello_batteria|ladezustand|nivel_de_bateria|niveau_de_batterie)$/i;
-    if (isAtto3Family) {
-      const attoProbe = states.find((eid) => /^sensor\..*atto/i.test(eid) && batteryPattern.test(eid));
-      if (attoProbe) {
-        const [, objectId] = attoProbe.split(".");
+
+    const profilePatterns = {
+      atto3: /^sensor\..*atto.*3/i,
+      atto3Evo: /^sensor\..*atto.*3/i,
+      atto2: /^sensor\..*atto.*2/i,
+      atto2_dmi: /^sensor\..*atto.*2/i,
+      seal: /^sensor\..*seal(?![_a-z0-9]*(?:_u|ion))/i,
+      seal5: /^sensor\..*seal.*5/i,
+      seal_u: /^sensor\..*seal.*u/i,
+      seal_u_dmi: /^sensor\..*seal.*u/i,
+      sealion7: /^sensor\..*sealion.*7/i,
+      sealion6: /^sensor\..*sealion.*6/i,
+      sealion5_dmi: /^sensor\..*sealion.*5/i,
+      dolphin: /^sensor\..*dolphin(?![_a-z0-9]*surf)/i,
+      dolphin_surf: /^sensor\..*dolphin.*surf/i,
+      tang: /^sensor\..*tang/i,
+      han: /^sensor\..*han/i,
+      m6: /^sensor\..*m6/i,
+      seagull: /^sensor\..*(seagull|dolphin.*mini)/i,
+      shark: /^sensor\..*shark/i,
+    };
+
+    const targetPattern = profilePatterns[profile];
+    if (targetPattern) {
+      const match = states.find((eid) => targetPattern.test(eid) && batteryPattern.test(eid));
+      if (match) {
+        const [, objectId] = match.split(".");
         return objectId.replace(batteryPattern, "");
       }
     }
+
     const probe = states.find((eid) => /^sensor\./.test(eid) && batteryPattern.test(eid));
     if (!probe) return "";
     const [domain, objectId] = probe.split(".");
@@ -1856,6 +2228,14 @@ class Byd3DCard extends HTMLElement {
       const candidatePrefixes = [prefix];
       if (prefix === "byd_atto_3") candidatePrefixes.push("byd_atto_3_evo", "bydatto3evo", "bydatto3");
       else if (prefix === "byd_atto_3_evo") candidatePrefixes.push("byd_atto_3", "bydatto3evo", "bydatto3");
+      else if (prefix === "byd_seal_u") candidatePrefixes.push("byd_seal_u_dmi", "bydsealu", "bydsealudmi");
+      else if (prefix === "byd_seal_u_dmi") candidatePrefixes.push("byd_seal_u", "bydsealudmi", "bydsealu");
+      else if (prefix === "byd_atto_2") candidatePrefixes.push("byd_atto_2_dmi", "bydatto2");
+      else if (prefix === "byd_atto_2_dmi") candidatePrefixes.push("byd_atto_2", "bydatto2dmi");
+      else if (prefix === "byd_sealion_6") candidatePrefixes.push("byd_sealion6", "bydsealion6");
+      else if (prefix === "byd_sealion_5_dmi") candidatePrefixes.push("byd_sealion5_dmi", "bydsealion5");
+      else if (prefix === "byd_seagull") candidatePrefixes.push("byd_dolphin_mini", "bydseagull", "byddolphinmini");
+      else if (prefix === "byd_shark_6") candidatePrefixes.push("byd_shark", "bydshark6", "bydshark");
       for (const p of candidatePrefixes) {
         for (const domain of hint.domains) {
           for (const suffix of suffixes) {
@@ -1922,9 +2302,18 @@ class Byd3DCard extends HTMLElement {
       dolphin: `${basePath}/byd_dolphin.png`,
       sealion7: `${basePath}/sealion.png`,
       atto2: `${basePath}/ATTO2.png`,
+      atto2_dmi: `${basePath}/ATTO2.png`,
       seal5: `${basePath}/byd_seal.png`,
       dolphin_surf: `${basePath}/dolphin_surf.png`,
       tang: `${basePath}/TANG.png`,
+      han: `${basePath}/han.png`,
+      seal_u: `${basePath}/seal_u.png`,
+      seal_u_dmi: `${basePath}/seal_u_dmi.png`,
+      sealion5_dmi: `${basePath}/sealion5_dmi.png`,
+      sealion6: `${basePath}/sealion6.png`,
+      m6: `${basePath}/m6.png`,
+      seagull: `${basePath}/seagull.png`,
+      shark: `${basePath}/shark.png`,
     };
     return localMap[key] || null;
   }
@@ -6191,9 +6580,18 @@ class Byd3DCardEditor extends HTMLElement {
           dolphin: `${basePath}/byd_dolphin.png`,
           sealion7: `${basePath}/sealion.png`,
           atto2: `${basePath}/ATTO2.png`,
+          atto2_dmi: `${basePath}/ATTO2.png`,
           seal5: `${basePath}/byd_seal.png`,
           dolphin_surf: `${basePath}/dolphin_surf.png`,
           tang: `${basePath}/TANG.png`,
+          han: `${basePath}/han.png`,
+          seal_u: `${basePath}/seal_u.png`,
+          seal_u_dmi: `${basePath}/seal_u_dmi.png`,
+          sealion5_dmi: `${basePath}/sealion5_dmi.png`,
+          sealion6: `${basePath}/sealion6.png`,
+          m6: `${basePath}/m6.png`,
+          seagull: `${basePath}/seagull.png`,
+          shark: `${basePath}/shark.png`,
         };
         const localImage = localImages[key] || profile.image;
         return `
@@ -6210,6 +6608,7 @@ class Byd3DCardEditor extends HTMLElement {
     const langs = [
       { key: "he", label: "עברית", flag: "🇮🇱" },
       { key: "en", label: "English", flag: "🇺🇸" },
+      { key: "de", label: "Deutsch", flag: "🇩🇪" },
       { key: "ru", label: "Русский", flag: "🇷🇺" },
       { key: "fr", label: "Français", flag: "🇫🇷" },
       { key: "ca", label: "Català", flag: "🇦🇩" },
