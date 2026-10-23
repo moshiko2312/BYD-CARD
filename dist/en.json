@@ -135,6 +135,7 @@
   "charging_consumption_value": "Consumption",
   "charging_period_value": "Period",
   "charging_period_sensor": "Current",
+  "charging_duration_value": "Charging duration",
   "charging_rate_value": "Cost per kWh",
   "charging_total_cost": "Estimated cost",
   "charging_cost_unavailable": "No consumption data available",

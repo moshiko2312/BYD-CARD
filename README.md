@@ -17,7 +17,7 @@ Recommended order:
 ## Features
 
 - 3D hero layout for vehicle image and battery status
-- Vehicle profiles: `ATTO 3`, `SEAL`, `DOLPHIN`, `SEALION 7`, `ATTO 2`, `SEAL 5`, `DOLPHIN SURF`, `TANG`
+- Vehicle profiles: `ATTO 3`, `ATTO 3 Evo`, `SEAL`, `DOLPHIN`, `SEALION 7`, `ATTO 2`, `SEAL 5`, `DOLPHIN SURF`, `TANG`
 - Auto entity mapping via `entity_prefix`
 - Category tabs (radio style):
   - `Summary`
@@ -28,7 +28,7 @@ Recommended order:
   - `Quick actions`
 - Drag & drop category order in UI editor
 - Last selected category is remembered after refresh
-- Languages: Hebrew, English, Russian, French, Catalan
+- Languages: Hebrew, English, Russian, French, Catalan, Italian, Spanish
 - Local profile images from `pic/`
 - External actions: choose multiple entities from Home Assistant and trigger them from a hero popup
 - Trunk control: hero icon color reflects open/closed state, with a Yes/No confirmation popup before opening or closing (opt-in via editor toggle)
@@ -216,6 +216,7 @@ unlock_pin_code: "1234"
 ## Profile images (in this repo)
 
 - `pic/bydatoo3.png` - BYD ATTO 3 profile image
+- `pic/bydatto3evo.png` - BYD ATTO 3 Evo profile image
 - `pic/byd_dolphin.png` - BYD DOLPHIN profile image
 - `pic/seal.png` - BYD SEAL source profile image
 - `pic/sealion.png` - BYD SEALION 7 source profile image

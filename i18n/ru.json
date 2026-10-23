@@ -126,6 +126,7 @@
   "charging_consumption_value": "Потребление",
   "charging_period_value": "Период",
   "charging_period_sensor": "Текущий",
+  "charging_duration_value": "Длительность зарядки",
   "charging_rate_value": "Стоимость за кВт⋅ч",
   "charging_total_cost": "Оценочная стоимость",
   "charging_cost_unavailable": "Нет данных о потреблении",

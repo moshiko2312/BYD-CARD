@@ -19,6 +19,36 @@ const LEGACY_IMAGE_BASE_PATHS = new Set(["/local/byd-card/pic", `${DEFAULT_ASSET
 const LEGACY_I18N_BASE_PATHS = new Set(["/local/byd-card/i18n", `${DEFAULT_ASSET_BASE_PATH}/i18n`]);
 
 const PROFILE_IMAGES = {
+
+  atto3Evo:
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1">
+      <stop offset="0%" stop-color="#26384a"/>
+      <stop offset="100%" stop-color="#0f141d"/>
+    </linearGradient>
+    <linearGradient id="car" x1="0" x2="1">
+      <stop offset="0%" stop-color="#f7fbff"/>
+      <stop offset="60%" stop-color="#cfd9e5"/>
+      <stop offset="100%" stop-color="#9caab8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="520" fill="url(#bg)"/>
+  <ellipse cx="600" cy="425" rx="430" ry="50" fill="rgba(0,0,0,0.38)"/>
+  <path d="M170 323c21-57 78-108 146-130l160-50c42-14 86-16 130-7l219 41c58 11 110 42 148 88l63 75-18 35H128l42-52z" fill="url(#car)"/>
+  <path d="M298 262l155-71c30-13 63-15 95-9l194 31c35 6 68 23 94 48l49 46H283l15-45z" fill="#1d2a37"/>
+  <path d="M382 275h453c14 0 25 11 25 24v7H358v-6c0-14 11-25 24-25z" fill="#2a3a4d"/>
+  <circle cx="360" cy="379" r="74" fill="#111822"/>
+  <circle cx="360" cy="379" r="41" fill="#8ea0b3"/>
+  <circle cx="849" cy="379" r="74" fill="#111822"/>
+  <circle cx="849" cy="379" r="41" fill="#8ea0b3"/>
+  <rect x="253" y="331" width="104" height="20" rx="10" fill="#d7e8f8"/>
+  <rect x="858" y="331" width="90" height="20" rx="10" fill="#d7e8f8"/>
+  <text x="74" y="92" fill="#ecf5ff" font-size="48" font-family="ui-sans-serif,Arial" font-weight="700">BYD ATTO 3 Evo</text>
+</svg>
+`),
   atto3:
     "data:image/svg+xml;utf8," +
     encodeURIComponent(`
@@ -131,6 +161,11 @@ const VEHICLE_PROFILES = {
     image: PROFILE_IMAGES.atto3,
     icon: "mdi:car-electric",
   },
+  atto3Evo: {
+    label: "BYD ATTO 3 Evo",
+    image: PROFILE_IMAGES.atto3Evo,
+    icon: "mdi:car-electric",
+  },
   seal: {
     label: "BYD SEAL",
     image: PROFILE_IMAGES.seal,
@@ -170,6 +205,7 @@ const VEHICLE_PROFILES = {
 
 const PROFILE_DEFAULTS = {
   atto3: { title: "BYD ATTO 3", entity_prefix: "byd_atto_3" },
+  atto3Evo: { title: "BYD ATTO 3 Evo", entity_prefix: "byd_atto_3" },
   seal: { title: "BYD SEAL", entity_prefix: "byd_seal" },
   dolphin: { title: "BYD DOLPHIN", entity_prefix: "byd_dolphin" },
   sealion7: { title: "BYD SEALION 7", entity_prefix: "byd_sealion_7" },
@@ -182,17 +218,72 @@ const PROFILE_DEFAULTS = {
 const HYBRID_PROFILE_KEYS = new Set(["tang", "seal5"]);
 
 const ENTITY_HINTS = {
-  battery: { domains: ["sensor"], suffixes: ["elec_percent", "battery_level"] },
+  battery: {
+    domains: ["sensor"],
+    suffixes: [
+      "elec_percent",
+      "battery_level",
+      "livello_batteria",
+      "ladezustand",
+      "nivel_de_bateria",
+      "niveau_de_batterie",
+    ],
+  },
   fuel: {
     domains: ["sensor"],
-    suffixes: ["oil_percent", "oil_percentage", "fuel_level", "fuel_percent", "fuel_percentage", "oil_level"],
+    suffixes: [
+      "oil_percent",
+      "oil_percentage",
+      "fuel_level",
+      "fuel_percent",
+      "fuel_percentage",
+      "oil_level",
+      "livello_carburante",
+      "kraftstofffullstand",
+      "kraftstoffstand",
+      "nivel_de_combustible",
+      "niveau_de_carburant",
+    ],
   },
   fuel_range: {
     domains: ["sensor"],
-    suffixes: ["oil_endurance", "fuel_endurance", "fuel_range"],
+    suffixes: [
+      "oil_endurance",
+      "fuel_endurance",
+      "fuel_range",
+      "autonomia_carburante",
+      "restreichweite_kraftstoff",
+      "rango_de_combustible",
+      "autonomie_carburant",
+    ],
   },
-  range: { domains: ["sensor"], suffixes: ["range", "endurance_mileage", "endurance_mileage_v2"] },
-  charging: { domains: ["binary_sensor"], suffixes: ["charging", "is_charging"] },
+  range: {
+    domains: ["sensor"],
+    suffixes: [
+      "range",
+      "endurance_mileage",
+      "endurance_mileage_v2",
+      "autonomia",
+      "autonomia_v2",
+      "autonomia_ev",
+      "reichweite",
+      "reichweite_v2",
+      "autonomie",
+    ],
+  },
+  charging: {
+    domains: ["binary_sensor", "sensor"],
+    suffixes: [
+      "charging",
+      "is_charging",
+      "in_carica",
+      "stato_di_ricarica",
+      "stato_di_carica",
+      "laden",
+      "cargando",
+      "chargement",
+    ],
+  },
   charging_energy: {
     domains: ["sensor"],
     suffixes: [
@@ -204,6 +295,13 @@ const ENTITY_HINTS = {
       "charging_kwh",
       "charge_added",
       "session_energy",
+      "energia_di_ricarica",
+      "energia_caricata",
+      "energia_totale",
+      "ladeenergie",
+      "geladene_energie",
+      "energia_de_carga",
+      "energie_de_charge",
     ],
   },
   charging_type: {
@@ -217,53 +315,475 @@ const ENTITY_HINTS = {
       "fast_charging",
       "dc_charging",
       "ac_charging",
+      "tipo_di_ricarica",
+      "tipo_ricarica",
+      "ladetyp",
+      "lademodus",
+      "tipo_de_carga",
+      "type_de_charge",
     ],
   },
-  battery_power: { domains: ["sensor"], suffixes: ["battery_power"] },
-  climate: { domains: ["climate", "switch"], suffixes: ["climate", "a_c_on", "car_on"] },
-  ac_switch: { domains: ["switch"], suffixes: ["a_c_on", "climate", "car_on"] },
-  battery_heat: { domains: ["switch"], suffixes: ["battery_heat"] },
-  cabin_temp: { domains: ["sensor"], suffixes: ["cabin_temperature", "temp_in_car"] },
-  exterior_temp: { domains: ["sensor"], suffixes: ["exterior_temperature", "temp_out_car"] },
-  doors: { domains: ["binary_sensor"], suffixes: ["doors", "is_any_door_open"] },
-  windows: { domains: ["binary_sensor"], suffixes: ["windows", "is_any_window_open"] },
-  speed: { domains: ["sensor"], suffixes: ["speed"] },
-  odometer: { domains: ["sensor"], suffixes: ["odometer", "total_mileage", "total_mileage_v2"] },
-  lock: { domains: ["lock"], suffixes: ["lock"] },
-  online: { domains: ["binary_sensor", "sensor"], suffixes: ["online", "is_online"] },
-  tire_fl: { domains: ["sensor"], suffixes: ["front_left_tire_pressure", "left_front_tire_pressure"] },
-  tire_fr: { domains: ["sensor"], suffixes: ["front_right_tire_pressure", "right_front_tire_pressure"] },
-  tire_rl: { domains: ["sensor"], suffixes: ["rear_left_tire_pressure", "left_rear_tire_pressure"] },
-  tire_rr: { domains: ["sensor"], suffixes: ["rear_right_tire_pressure", "right_rear_tire_pressure"] },
-  location: { domains: ["device_tracker"], suffixes: ["location"] },
-  flash_lights: { domains: ["button"], suffixes: ["flash_lights"] },
-  find_car: { domains: ["button"], suffixes: ["find_car"] },
-  close_windows: { domains: ["button"], suffixes: ["close_windows"] },
-  trunk_lid: { domains: ["binary_sensor"], suffixes: ["trunk", "trunk_lid"] },
-  open_trunk: { domains: ["button"], suffixes: ["open_trunk"] },
-  close_trunk: { domains: ["button"], suffixes: ["close_trunk"] },
-  shutdown_vehicle: { domains: ["button"], suffixes: ["shutdown_vehicle"] },
-  driver_seat_heat: { domains: ["select"], suffixes: ["driver_seat_heat", "driver_seat_heating", "driver_seat_ventilation"] },
-  driver_seat_ventilation: { domains: ["select"], suffixes: ["driver_seat_ventilation"] },
+  battery_power: {
+    domains: ["sensor"],
+    suffixes: [
+      "battery_power",
+      "total_power",
+      "potenza_totale",
+      "potenza_batteria",
+      "batterieleistung",
+      "gesamtleistung",
+      "potencia_de_la_bateria",
+      "potencia_total",
+      "puissance_de_la_batterie",
+      "puissance_totale",
+    ],
+  },
+  climate: {
+    domains: ["climate", "switch"],
+    suffixes: [
+      "climate",
+      "a_c_on",
+      "car_on",
+      "climatizzazione",
+      "climatizzatore_acceso",
+      "klima",
+      "klimaanlage_an",
+      "climat",
+      "climatisation_allumee",
+    ],
+  },
+  ac_switch: {
+    domains: ["switch"],
+    suffixes: [
+      "a_c_on",
+      "climate",
+      "car_on",
+      "climatizzatore_acceso",
+      "climatizzazione",
+      "klimaanlage_an",
+      "klima",
+      "ac_encendido",
+      "climatisation_allumee",
+    ],
+  },
+  battery_heat: {
+    domains: ["binary_sensor", "switch"],
+    suffixes: [
+      "battery_heat",
+      "battery_heat_state",
+      "riscaldamento_batteria",
+      "batterievorkonditionierung",
+      "batterieheizung",
+      "calefaccion_por_bateria",
+      "chauffage_de_la_batterie",
+    ],
+  },
+  cabin_temp: {
+    domains: ["sensor"],
+    suffixes: [
+      "cabin_temperature",
+      "temp_in_car",
+      "temperatura_abitacolo",
+      "innenraumtemperatur",
+      "temperatura_de_la_cabina",
+      "temperature_de_la_cabine",
+    ],
+  },
+  exterior_temp: {
+    domains: ["sensor"],
+    suffixes: [
+      "exterior_temperature",
+      "temp_out_car",
+      "temperatura_esterna",
+      "auentemperatur",
+      "aussentemperatur",
+      "temperatura_exterior",
+      "temperature_exterieure",
+    ],
+  },
+  doors: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "doors",
+      "is_any_door_open",
+      "porte",
+      "turen_offen",
+      "tueren_offen",
+      "puertas_abiertas",
+      "portes_ouvertes",
+    ],
+  },
+  windows: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "windows",
+      "is_any_window_open",
+      "finestrini",
+      "fenster_offen",
+      "ventanas_abiertas",
+      "fenetres_ouvertes",
+    ],
+  },
+  speed: {
+    domains: ["sensor"],
+    suffixes: [
+      "speed",
+      "velocita",
+      "geschwindigkeit",
+      "velocidad",
+      "vitesse",
+    ],
+  },
+  odometer: {
+    domains: ["sensor"],
+    suffixes: [
+      "odometer",
+      "total_mileage",
+      "total_mileage_v2",
+      "contachilometri",
+      "contachilometri_v2",
+      "kilometerzahler",
+      "kilometerzaehler",
+      "cuentakilometros",
+      "odometre",
+    ],
+  },
+  lock: {
+    domains: ["lock", "binary_sensor"],
+    suffixes: [
+      "lock",
+      "serratura",
+      "bloccato",
+      "is_locked",
+      "abschliessen",
+      "verriegelt",
+      "cerrar",
+      "bloqueado",
+      "verrouillage",
+      "verrouille",
+    ],
+  },
+  online: {
+    domains: ["binary_sensor", "sensor"],
+    suffixes: [
+      "online",
+      "is_online",
+      "en_linea",
+      "en_ligne",
+    ],
+  },
+  tire_fl: {
+    domains: ["sensor"],
+    suffixes: [
+      "front_left_tire_pressure",
+      "left_front_tire_pressure",
+      "pressione_pneumatico_anteriore_sinistro",
+      "reifendruck_vorne_links",
+      "presion_neumatico_delantero_izquierdo",
+      "pression_des_pneus_avant_gauche",
+    ],
+  },
+  tire_fr: {
+    domains: ["sensor"],
+    suffixes: [
+      "front_right_tire_pressure",
+      "right_front_tire_pressure",
+      "pressione_pneumatico_anteriore_destro",
+      "reifendruck_vorne_rechts",
+      "presion_neumatico_delantero_derecho",
+      "pression_des_pneus_avant_droit",
+    ],
+  },
+  tire_rl: {
+    domains: ["sensor"],
+    suffixes: [
+      "rear_left_tire_pressure",
+      "left_rear_tire_pressure",
+      "pressione_pneumatico_posteriore_sinistro",
+      "reifendruck_hinten_links",
+      "presion_neumatico_trasero_izquierdo",
+      "pression_pneu_arriere_gauche",
+    ],
+  },
+  tire_rr: {
+    domains: ["sensor"],
+    suffixes: [
+      "rear_right_tire_pressure",
+      "right_rear_tire_pressure",
+      "pressione_pneumatico_posteriore_destro",
+      "reifendruck_hinten_rechts",
+      "presion_neumatico_trasero_derecho",
+      "pression_pneu_arriere_droit",
+    ],
+  },
+  location: {
+    domains: ["device_tracker"],
+    suffixes: [
+      "location",
+      "posizione",
+      "standort",
+      "ubicacion",
+      "emplacement",
+    ],
+  },
+  flash_lights: {
+    domains: ["button"],
+    suffixes: [
+      "flash_lights",
+      "lampeggia_luci",
+      "lichthupe",
+      "luces_de_destello",
+      "appels_de_phares",
+    ],
+  },
+  find_car: {
+    domains: ["button"],
+    suffixes: [
+      "find_car",
+      "trova_auto",
+      "auto_finden",
+      "encontrar_auto",
+      "trouver_une_voiture",
+    ],
+  },
+  close_windows: {
+    domains: ["button"],
+    suffixes: [
+      "close_windows",
+      "chiudi_finestrini",
+      "fenster_schlieen",
+      "fenster_schliessen",
+      "cerrar_ventanas",
+      "fermer_les_fenetres",
+    ],
+  },
+  trunk_lid: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "trunk",
+      "trunk_lid",
+      "bagagliaio",
+      "kofferraum",
+      "maletero",
+      "coffre",
+    ],
+  },
+  open_trunk: {
+    domains: ["button"],
+    suffixes: [
+      "open_trunk",
+      "apri_bagagliaio",
+      "kofferraum_offnen",
+      "kofferraum_oeffnen",
+      "abrir_maletero",
+      "ouvrir_le_coffre",
+    ],
+  },
+  close_trunk: {
+    domains: ["button"],
+    suffixes: [
+      "close_trunk",
+      "chiudi_bagagliaio",
+      "kofferraum_schlieen",
+      "kofferraum_schliessen",
+      "cerrar_maletero",
+      "fermer_le_coffre",
+    ],
+  },
+  shutdown_vehicle: {
+    domains: ["button"],
+    suffixes: [
+      "shutdown_vehicle",
+      "spegni_veicolo",
+      "fahrzeug_ausschalten",
+      "apagar_vehiculo",
+      "eteindre_le_vehicule",
+    ],
+  },
+  driver_seat_heat: {
+    domains: ["select"],
+    suffixes: [
+      "driver_seat_heat",
+      "driver_seat_heating",
+      "driver_seat_ventilation",
+      "riscaldamento_sedile_conducente",
+      "ventilazione_sedile_conducente",
+      "sitzheizung_fahrer",
+      "sitzbeluftung_fahrer",
+      "calefaccion_del_asiento_del_conductor",
+    ],
+  },
+  driver_seat_ventilation: {
+    domains: ["select"],
+    suffixes: [
+      "driver_seat_ventilation",
+      "ventilazione_sedile_conducente",
+      "sitzbeluftung_fahrer",
+      "sitzbelueftung_fahrer",
+      "ventilacion_del_asiento_del_conductor",
+      "ventilation_du_siege_conducteur",
+    ],
+  },
   passenger_seat_heat: {
     domains: ["select"],
-    suffixes: ["passenger_seat_heat", "passenger_seat_heating", "passenger_seat_ventilation"],
+    suffixes: [
+      "passenger_seat_heat",
+      "passenger_seat_heating",
+      "passenger_seat_ventilation",
+      "riscaldamento_sedile_passeggero",
+      "ventilazione_sedile_passeggero",
+      "sitzheizung_beifahrer",
+      "sitzbeluftung_beifahrer",
+      "calefaccion_del_asiento_del_pasajero",
+    ],
   },
-  passenger_seat_ventilation: { domains: ["select"], suffixes: ["passenger_seat_ventilation"] },
-  rear_left_seat_heat: { domains: ["select"], suffixes: ["rear_left_seat_heat", "rear_left_seat_heating"] },
-  rear_right_seat_heat: { domains: ["select"], suffixes: ["rear_right_seat_heat", "rear_right_seat_heating"] },
-  tirepressure_system: { domains: ["binary_sensor"], suffixes: ["tirepressure_system"] },
-  rapid_tire_leak: { domains: ["binary_sensor"], suffixes: ["rapid_tire_leak"] },
-  left_front_tire_status: { domains: ["binary_sensor"], suffixes: ["left_front_tire_status"] },
-  right_front_tire_status: { domains: ["binary_sensor"], suffixes: ["right_front_tire_status"] },
-  left_rear_tire_status: { domains: ["binary_sensor"], suffixes: ["left_rear_tire_status"] },
-  right_rear_tire_status: { domains: ["binary_sensor"], suffixes: ["right_rear_tire_status"] },
-  abs_warning: { domains: ["binary_sensor"], suffixes: ["abs_warning"] },
-  braking_system: { domains: ["binary_sensor"], suffixes: ["braking_system"] },
-  steering_system: { domains: ["binary_sensor"], suffixes: ["steering_system"] },
-  charging_system: { domains: ["binary_sensor"], suffixes: ["charging_system"] },
-  srs: { domains: ["binary_sensor"], suffixes: ["srs"] },
-  svs: { domains: ["binary_sensor"], suffixes: ["svs"] },
+  passenger_seat_ventilation: {
+    domains: ["select"],
+    suffixes: [
+      "passenger_seat_ventilation",
+      "ventilazione_sedile_passeggero",
+      "sitzbeluftung_beifahrer",
+      "sitzbelueftung_beifahrer",
+      "ventilacion_del_asiento_del_pasajero",
+      "ventilation_du_siege_passager",
+    ],
+  },
+  rear_left_seat_heat: {
+    domains: ["select"],
+    suffixes: [
+      "rear_left_seat_heat",
+      "rear_left_seat_heating",
+      "riscaldamento_sedile_posteriore_sinistro",
+      "sitzheizung_hinten_links",
+    ],
+  },
+  rear_right_seat_heat: {
+    domains: ["select"],
+    suffixes: [
+      "rear_right_seat_heat",
+      "rear_right_seat_heating",
+      "riscaldamento_sedile_posteriore_destro",
+      "sitzheizung_hinten_rechts",
+    ],
+  },
+  tirepressure_system: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "tirepressure_system",
+      "stato_tpms",
+      "tpms_status",
+      "estado_tpms",
+      "etat_tpms",
+    ],
+  },
+  rapid_tire_leak: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "rapid_tire_leak",
+      "perdita_rapida_pneumatico",
+      "plotzlicher_druckverlust",
+      "ploetzlicher_druckverlust",
+      "fuga_rapida_de_neumaticos",
+      "fuite_rapide_des_pneus",
+    ],
+  },
+  left_front_tire_status: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "left_front_tire_status",
+      "stato_pneumatico_anteriore_sinistro",
+      "status_reifen_vorne_links",
+      "estado_neumatico_delantero_izquierdo",
+      "etat_pneu_avant_gauche",
+    ],
+  },
+  right_front_tire_status: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "right_front_tire_status",
+      "stato_pneumatico_anteriore_destro",
+      "status_reifen_vorne_rechts",
+      "estado_neumatico_delantero_derecho",
+      "etat_pneu_avant_droit",
+    ],
+  },
+  left_rear_tire_status: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "left_rear_tire_status",
+      "stato_pneumatico_posteriore_sinistro",
+      "status_reifen_hinten_links",
+      "estado_neumatico_trasero_izquierdo",
+      "etat_pneu_arriere_gauche",
+    ],
+  },
+  right_rear_tire_status: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "right_rear_tire_status",
+      "stato_pneumatico_posteriore_destro",
+      "status_reifen_hinten_rechts",
+      "estado_neumatico_trasero_derecho",
+      "etat_pneu_arriere_droit",
+    ],
+  },
+  abs_warning: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "abs_warning",
+      "avviso_abs",
+      "abs_warnung",
+      "advertencia_abs",
+      "avertissement_abs",
+    ],
+  },
+  braking_system: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "braking_system",
+      "sistema_frenante",
+      "bremssystem",
+      "sistema_de_frenado",
+    ],
+  },
+  steering_system: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "steering_system",
+      "sterzo_elettrico",
+      "elektrische_servolenkung",
+      "direccion_asistida_electrica",
+    ],
+  },
+  charging_system: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "charging_system",
+      "riscaldamento_carica",
+      "ladesystem",
+      "sistema_de_carga",
+    ],
+  },
+  srs: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "srs",
+      "avviso_airbag",
+      "airbagwarnung",
+      "advertencia_de_bolsa_de_aire",
+      "avertissement_dairbag",
+    ],
+  },
+  svs: {
+    domains: ["binary_sensor"],
+    suffixes: [
+      "svs",
+      "manutenzione_veicolo_richiesta",
+      "wartung_erforderlich",
+      "servicio_requerido_pronto",
+      "entretien_requis_bientot",
+    ],
+  },
 };
 
 const DEFAULT_CONFIG = {
@@ -298,7 +818,7 @@ const DEFAULT_CONFIG = {
   charging_cost_mode: "monthly",
   tire_pressure_unit: "psi",
   refresh_interval_seconds: 25,
-  language: "he",
+  language: "en",
   category_order: ["summary", "climate", "vehicle", "tires", "location", "actions"],
   custom_entities: [],
   custom_entity_names: {},
@@ -614,6 +1134,44 @@ const ALERT_I18N = {
     alert_srs: "SRS",
     alert_svs: "SVS",
   },
+  it: {
+    alert_header: "Avviso veicolo",
+    alert_header_single: "Avviso nel veicolo",
+    alert_tire_pressure_low: "Pressione pneumatici bassa",
+    alert_tire_pressure_critical: "Pressione pneumatici critica",
+    alert_system_fault: "Guasto di sistema",
+    front_left: "Anteriore sinistro",
+    front_right: "Anteriore destro",
+    rear_left: "Posteriore sinistro",
+    rear_right: "Posteriore destro",
+    rapid_tire_leak: "Perdita rapida pressione pneumatico",
+    alert_tpms: "TPMS",
+    alert_abs: "ABS",
+    alert_brake: "Freni",
+    alert_steering: "Sterzo",
+    alert_charging: "Ricarica",
+    alert_srs: "SRS",
+    alert_svs: "SVS",
+  },
+  es: {
+    alert_header: "Aviso del vehículo",
+    alert_header_single: "Aviso en el vehículo",
+    alert_tire_pressure_low: "Presión de neumáticos baja",
+    alert_tire_pressure_critical: "Presión de neumáticos crítica",
+    alert_system_fault: "Fallo del sistema",
+    front_left: "Delantero izquierdo",
+    front_right: "Delantero derecho",
+    rear_left: "Trasero izquierdo",
+    rear_right: "Trasero derecho",
+    rapid_tire_leak: "Pérdida rápida de presión",
+    alert_tpms: "TPMS",
+    alert_abs: "ABS",
+    alert_brake: "Frenos",
+    alert_steering: "Dirección",
+    alert_charging: "Carga",
+    alert_srs: "SRS",
+    alert_svs: "SVS",
+  },
   ru: {
     alert_header: "Предупреждение авто",
     alert_header_single: "Предупреждение в авто",
@@ -746,6 +1304,20 @@ function normalizeImageBasePath(value) {
   return cleaned;
 }
 
+function normalizeVehicleProfile(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "atto3";
+  if (VEHICLE_PROFILES[raw]) return raw;
+  const canonical = raw.toLowerCase().replace(/^byd[\s_-]*/, "").replace(/[\s_-]+/g, "");
+  for (const key of Object.keys(VEHICLE_PROFILES)) {
+    const keyCanonical = key.toLowerCase().replace(/^byd[\s_-]*/, "").replace(/[\s_-]+/g, "");
+    if (keyCanonical === canonical) {
+      return key;
+    }
+  }
+  return "atto3";
+}
+
 function normalizeI18nBasePath(value) {
   const cleaned = String(value || "").trim().replace(/\/$/, "");
   if (!cleaned) return DEFAULT_I18N_BASE_PATH;
@@ -841,6 +1413,7 @@ class Byd3DCard extends HTMLElement {
 
   setConfig(config) {
     this._config = { ...DEFAULT_CONFIG, ...config, entities: { ...(config.entities || {}) } };
+    this._config.vehicle_profile = normalizeVehicleProfile(this._config.vehicle_profile);
     this._config.seat_passenger_mode = normalizeSeatPassengerMode(
       config?.seat_passenger_mode,
       Boolean(config?.show_seat_cooling)
@@ -1138,11 +1711,15 @@ class Byd3DCard extends HTMLElement {
   }
 
   getCardSize() {
-    return 8;
+    return 14;
   }
 
   getGridOptions() {
-    return { rows: 8, columns: 12, min_rows: 6 };
+    return {
+      rows: "auto",
+      columns: 12,
+      min_columns: 6,
+    };
   }
 
   _snapshotStateValue(logicalKey) {
@@ -1234,11 +1811,21 @@ class Byd3DCard extends HTMLElement {
     if (this._config.entity_prefix) return this._config.entity_prefix;
     if (!this._hass || !this._hass.states || typeof this._hass.states !== "object") return "";
     const states = Object.keys(this._hass.states);
-    const probe = states.find((eid) => /^sensor\..+_(battery_level|elec_percent)$/.test(eid));
+    const profile = normalizeVehicleProfile(this._config?.vehicle_profile);
+    const isAtto3Family = profile === "atto3" || profile === "atto3Evo";
+    const batteryPattern = /_(battery_level|elec_percent|livello_batteria|ladezustand|nivel_de_bateria|niveau_de_batterie)$/i;
+    if (isAtto3Family) {
+      const attoProbe = states.find((eid) => /^sensor\..*atto/i.test(eid) && batteryPattern.test(eid));
+      if (attoProbe) {
+        const [, objectId] = attoProbe.split(".");
+        return objectId.replace(batteryPattern, "");
+      }
+    }
+    const probe = states.find((eid) => /^sensor\./.test(eid) && batteryPattern.test(eid));
     if (!probe) return "";
     const [domain, objectId] = probe.split(".");
     if (domain !== "sensor" || !objectId) return "";
-    return objectId.replace(/_(battery_level|elec_percent)$/, "");
+    return objectId.replace(batteryPattern, "");
   }
 
   _seatPassengerMode() {
@@ -1266,10 +1853,15 @@ class Byd3DCard extends HTMLElement {
     const all = this._hass.states;
 
     if (prefix) {
-      for (const domain of hint.domains) {
-        for (const suffix of suffixes) {
-          const candidate = `${domain}.${prefix}_${suffix}`;
-          if (all[candidate]) return candidate;
+      const candidatePrefixes = [prefix];
+      if (prefix === "byd_atto_3") candidatePrefixes.push("byd_atto_3_evo", "bydatto3evo", "bydatto3");
+      else if (prefix === "byd_atto_3_evo") candidatePrefixes.push("byd_atto_3", "bydatto3evo", "bydatto3");
+      for (const p of candidatePrefixes) {
+        for (const domain of hint.domains) {
+          for (const suffix of suffixes) {
+            const candidate = `${domain}.${p}_${suffix}`;
+            if (all[candidate]) return candidate;
+          }
         }
       }
     }
@@ -1289,26 +1881,43 @@ class Byd3DCard extends HTMLElement {
   _preferredSuffixesForLogicalKey(logicalKey, suffixes) {
     const ordered = Array.isArray(suffixes) ? [...suffixes] : [];
     const coolingMap = {
-      driver_seat_heat: "driver_seat_ventilation",
-      passenger_seat_heat: "passenger_seat_ventilation",
+      driver_seat_heat: [
+        "driver_seat_ventilation",
+        "ventilazione_sedile_conducente",
+        "sitzbeluftung_fahrer",
+        "sitzbelueftung_fahrer",
+        "ventilacion_del_asiento_del_conductor",
+        "ventilation_du_siege_conducteur",
+      ],
+      passenger_seat_heat: [
+        "passenger_seat_ventilation",
+        "ventilazione_sedile_passeggero",
+        "sitzbeluftung_beifahrer",
+        "sitzbelueftung_beifahrer",
+        "ventilacion_del_asiento_del_pasajero",
+        "ventilation_du_siege_passager",
+      ],
     };
-    const coolingSuffix = coolingMap[logicalKey];
-    if (!coolingSuffix || !ordered.includes(coolingSuffix)) return ordered;
-    const withoutCooling = ordered.filter((suffix) => suffix !== coolingSuffix);
+    const coolingSuffixes = coolingMap[logicalKey];
+    if (!coolingSuffixes || !coolingSuffixes.some((s) => ordered.includes(s))) return ordered;
+    const coolingList = coolingSuffixes.filter((s) => ordered.includes(s));
+    const withoutCooling = ordered.filter((suffix) => !coolingSuffixes.includes(suffix));
     const mode = this._seatPassengerMode();
     if (mode === "both") {
       return ordered; // include both
     }
     if (mode === "cool") {
-      return [coolingSuffix, ...withoutCooling];
+      return [...coolingList, ...withoutCooling];
     }
-    return [...withoutCooling, coolingSuffix];
+    return [...withoutCooling, ...coolingList];
   }
 
   _profileImage(profileKey) {
+    const key = normalizeVehicleProfile(profileKey);
     const basePath = (this._config.image_base_path || DEFAULT_IMAGE_BASE_PATH).replace(/\/$/, "");
     const localMap = {
       atto3: `${basePath}/bydatoo3.png`,
+      atto3Evo: `${basePath}/bydatto3evo.png`,
       seal: `${basePath}/seal.png`,
       dolphin: `${basePath}/byd_dolphin.png`,
       sealion7: `${basePath}/sealion.png`,
@@ -1317,11 +1926,11 @@ class Byd3DCard extends HTMLElement {
       dolphin_surf: `${basePath}/dolphin_surf.png`,
       tang: `${basePath}/TANG.png`,
     };
-    return localMap[profileKey] || null;
+    return localMap[key] || null;
   }
 
   _language() {
-    return this._config?.language || "he";
+    return this._config?.language || DEFAULT_CONFIG.language || "en";
   }
 
   _t(key) {
@@ -1558,7 +2167,10 @@ class Byd3DCard extends HTMLElement {
     }
     const base = (this._config.i18n_base_path || DEFAULT_I18N_BASE_PATH).replace(/\/$/, "");
     try {
-      const response = await fetch(`${base}/${lang}.json`, { cache: "no-cache" });
+      let response = await fetch(`${base}/${lang}.json`, { cache: "no-cache" });
+      if (!response.ok) {
+        response = await fetch(`${base}/i18n/${lang}.json`, { cache: "no-cache" });
+      }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const json = await response.json();
       this._translations = { ...FALLBACK_I18N, ...json };
@@ -3287,12 +3899,15 @@ class Byd3DCard extends HTMLElement {
       `
       : "";
 
+    const activeProfileKey = normalizeVehicleProfile(this._config.vehicle_profile);
+    const isAtto3Family = activeProfileKey === "atto3" || activeProfileKey === "atto3Evo";
+
     this.shadowRoot.innerHTML = `
       <ha-card>
         <div class="wrap ${lowBattery ? "low" : ""}" style="--byd-hero-title-size:${titleFontSize}px;">
           <div class="hero-title">${title}</div>
           <div class="hero">
-            <img class="car-image ${this._config.vehicle_profile === "atto3" ? "car-image-atto3" : ""}" src="${imageUrl}" data-fallback="${profile.image}" alt="${profile.label}" />
+            <img class="car-image ${isAtto3Family ? "car-image-atto3" : ""}" src="${imageUrl}" data-fallback="${profile.image}" alt="${profile.label}" />
             <div class="hero-overlay">
               ${heroHybridOverlay}
               ${serviceOverlay}
@@ -4259,6 +4874,7 @@ class Byd3DCard extends HTMLElement {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 8px;
+          box-sizing: border-box;
         }
         .cat-tab {
           appearance: none;
@@ -4266,13 +4882,15 @@ class Byd3DCard extends HTMLElement {
           background: linear-gradient(180deg, rgba(24,35,49,.86), rgba(15,22,31,.9));
           border-radius: 12px;
           min-height: 44px;
+          padding: 6px 4px;
+          box-sizing: border-box;
           color: rgba(228,240,252,.92);
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 7px;
-          font-size: clamp(15px, 1.25vw, 18px);
-          font-weight: 900;
+          gap: 6px;
+          font-size: clamp(13px, 1.1vw, 16px);
+          font-weight: 800;
           cursor: pointer;
           transition: transform .12s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
           text-align: center;
@@ -5324,7 +5942,13 @@ class Byd3DCard extends HTMLElement {
     const heroImage = this.shadowRoot.querySelector(".car-image");
     if (heroImage) {
       heroImage.addEventListener("error", () => {
+        const currentSrc = heroImage.getAttribute("src") || "";
         const fallback = heroImage.getAttribute("data-fallback");
+        if (!currentSrc.includes("/pic/") && !currentSrc.startsWith("data:")) {
+          const picSrc = currentSrc.replace(/\/([^/]+)$/, "/pic/$1");
+          heroImage.setAttribute("src", picSrc);
+          return;
+        }
         if (fallback && heroImage.getAttribute("src") !== fallback) {
           heroImage.setAttribute("src", fallback);
         }
@@ -5336,6 +5960,7 @@ class Byd3DCard extends HTMLElement {
 class Byd3DCardEditor extends HTMLElement {
   setConfig(config) {
     this._config = { ...DEFAULT_CONFIG, ...config, entities: { ...(config.entities || {}) } };
+    this._config.vehicle_profile = normalizeVehicleProfile(this._config.vehicle_profile);
     this._config.seat_passenger_mode = normalizeSeatPassengerMode(
       config?.seat_passenger_mode,
       Boolean(config?.show_seat_cooling)
@@ -5378,6 +6003,7 @@ class Byd3DCardEditor extends HTMLElement {
     );
     this._config.refresh_interval_seconds = this._normalizeRefreshInterval(this._config.refresh_interval_seconds);
     this._config.title_font_size = this._normalizeTitleFontSize(this._config.title_font_size);
+    this._loadTranslations();
     this._render();
   }
 
@@ -5393,13 +6019,35 @@ class Byd3DCardEditor extends HTMLElement {
 
   connectedCallback() {
     if (!this.shadowRoot) this.attachShadow({ mode: "open" });
+    this._loadTranslations();
     this._render();
     this._populatePrefixCandidates();
     this._ensureMdiIconCatalogLoaded();
   }
 
   _language() {
-    return this._config?.language || "he";
+    return this._config?.language || DEFAULT_CONFIG.language || "en";
+  }
+
+  async _loadTranslations() {
+    const lang = this._language();
+    const base = (this._config?.i18n_base_path || DEFAULT_I18N_BASE_PATH).replace(/\/$/, "");
+    const cacheKey = `${lang}:${this._config?.i18n_base_path || ""}`;
+    if (TRANSLATION_CACHE.has(cacheKey)) {
+      return;
+    }
+    try {
+      let response = await fetch(`${base}/${lang}.json`, { cache: "no-cache" });
+      if (!response.ok) {
+        response = await fetch(`${base}/i18n/${lang}.json`, { cache: "no-cache" });
+      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const json = await response.json();
+      TRANSLATION_CACHE.set(cacheKey, { ...FALLBACK_I18N, ...json });
+      this._render();
+    } catch (_err) {
+      // ignore
+    }
   }
 
   _t(key) {
@@ -5531,12 +6179,14 @@ class Byd3DCardEditor extends HTMLElement {
   }
 
   _renderProfileOptions() {
+    const activeKey = normalizeVehicleProfile(this._config.vehicle_profile);
     return Object.entries(VEHICLE_PROFILES)
       .map(([key, profile]) => {
-        const active = this._config.vehicle_profile === key ? "active" : "";
+        const active = activeKey === key ? "active" : "";
         const basePath = (this._config.image_base_path || DEFAULT_IMAGE_BASE_PATH).replace(/\/$/, "");
         const localImages = {
           atto3: `${basePath}/bydatoo3.png`,
+          atto3Evo: `${basePath}/bydatto3evo.png`,
           seal: `${basePath}/seal.png`,
           dolphin: `${basePath}/byd_dolphin.png`,
           sealion7: `${basePath}/sealion.png`,
@@ -5563,6 +6213,8 @@ class Byd3DCardEditor extends HTMLElement {
       { key: "ru", label: "Русский", flag: "🇷🇺" },
       { key: "fr", label: "Français", flag: "🇫🇷" },
       { key: "ca", label: "Català", flag: "🇦🇩" },
+      { key: "it", label: "Italiano", flag: "🇮🇹" },
+      { key: "es", label: "Español", flag: "🇪🇸" },
     ];
     return langs
       .map((lang) => {
@@ -5996,8 +6648,9 @@ class Byd3DCardEditor extends HTMLElement {
     const list = this.shadowRoot.getElementById("prefix_suggestions");
     if (!list) return;
     const prefixes = new Set();
+    const batteryPattern = /^sensor\.([a-z0-9_]+)_(battery_level|elec_percent|livello_batteria|ladezustand|nivel_de_bateria|niveau_de_batterie)$/i;
     for (const eid of Object.keys(this._hass.states)) {
-      const match = eid.match(/^sensor\.([a-z0-9_]+)_(battery_level|elec_percent)$/);
+      const match = eid.match(batteryPattern);
       if (match) prefixes.add(match[1]);
     }
     list.innerHTML = "";
@@ -7208,7 +7861,13 @@ class Byd3DCardEditor extends HTMLElement {
 
     this.shadowRoot.querySelectorAll(".profile img").forEach((img) => {
       img.addEventListener("error", () => {
+        const currentSrc = img.getAttribute("src") || "";
         const fallback = img.getAttribute("data-fallback");
+        if (!currentSrc.includes("/pic/") && !currentSrc.startsWith("data:")) {
+          const picSrc = currentSrc.replace(/\/([^/]+)$/, "/pic/$1");
+          img.setAttribute("src", picSrc);
+          return;
+        }
         if (fallback && img.getAttribute("src") !== fallback) {
           img.setAttribute("src", fallback);
         }
