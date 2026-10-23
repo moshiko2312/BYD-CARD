@@ -393,3 +393,7 @@ What it shows:
   - `i18n_base_path/<language>.json`
 - By default, `image_base_path` and `i18n_base_path` are auto-detected from the loaded card URL, so HACS/manual installs work without extra path config.
 - If local profile image is missing, the card falls back to built-in SVG.
+
+## Contributors
+
+- [@hexstudy](https://github.com/hexstudy) — BYD ATTO 3 Evo profile, Italian and Spanish translations, multilingual entity auto-detection, and Sections layout fix (v1.0.23, PR #18).
