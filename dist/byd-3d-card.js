@@ -818,7 +818,7 @@ const DEFAULT_CONFIG = {
   charging_cost_mode: "monthly",
   tire_pressure_unit: "psi",
   refresh_interval_seconds: 25,
-  language: "en",
+  language: "he",
   category_order: ["summary", "climate", "vehicle", "tires", "location", "actions"],
   custom_entities: [],
   custom_entity_names: {},
@@ -1930,7 +1930,7 @@ class Byd3DCard extends HTMLElement {
   }
 
   _language() {
-    return this._config?.language || DEFAULT_CONFIG.language || "en";
+    return this._config?.language || DEFAULT_CONFIG.language || "he";
   }
 
   _t(key) {
@@ -6026,7 +6026,7 @@ class Byd3DCardEditor extends HTMLElement {
   }
 
   _language() {
-    return this._config?.language || DEFAULT_CONFIG.language || "en";
+    return this._config?.language || DEFAULT_CONFIG.language || "he";
   }
 
   async _loadTranslations() {
