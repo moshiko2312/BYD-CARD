@@ -4,7 +4,7 @@
 
 const CARD_TYPE = "byd-3d-card";
 const CARD_NAME = "BYD 3D Card";
-const CARD_VERSION = "1.0.23";
+const CARD_VERSION = "1.0.24";
 const DEFAULT_ASSET_BASE_PATH = (() => {
   try {
     const base = new URL(".", import.meta.url).pathname;
@@ -3105,15 +3105,16 @@ class Byd3DCard extends HTMLElement {
   }
 
   _metric(label, value) {
-    return `<div class="metric"><label>${label}</label><strong>${value}</strong></div>`;
+    return `<div class="metric"><label>${escapeHtml(label)}</label><strong>${escapeHtml(value)}</strong></div>`;
   }
 
   _category(title, content, options = {}) {
     if (!content || content.trim() === "") return "";
     const titleClass = options.titleClass || "";
+    const safeTitle = escapeHtml(title);
     const icon = options.icon
-      ? `<span class="category-title-row"><ha-icon class="category-title-icon" icon="${options.icon}"></ha-icon><span class="category-title-text">${title}</span><span class="category-title-spacer"></span></span>`
-      : title;
+      ? `<span class="category-title-row"><ha-icon class="category-title-icon" icon="${escapeHtml(options.icon)}"></ha-icon><span class="category-title-text">${safeTitle}</span><span class="category-title-spacer"></span></span>`
+      : safeTitle;
     return `
       <section class="category">
         <h3 class="${titleClass}">${icon}</h3>
@@ -3135,14 +3136,14 @@ class Byd3DCard extends HTMLElement {
     const isCooling = logicalKey === "passenger_seat_ventilation" || this._resolveEntity(logicalKey)?.includes("ventilation");
     return `
       <div class="seat-control ${isCooling ? "seat-cooling" : ""}">
-        <div class="seat-title">${label}</div>
+        <div class="seat-title">${escapeHtml(label)}</div>
         <div class="seat-levels">
           ${options
             .map((opt) => {
               const normalized = String(opt || "").trim().toLowerCase();
               const active = current === normalized ? "active" : "";
               const tone = this._seatOptionTone(opt);
-              return `<button class="seat-level ${active} level-${tone}" data-seat="${logicalKey}" data-option="${opt}">${this._seatOptionLabel(opt)}</button>`;
+              return `<button class="seat-level ${active} level-${tone}" data-seat="${logicalKey}" data-option="${escapeHtml(opt)}">${escapeHtml(this._seatOptionLabel(opt))}</button>`;
             })
             .join("")}
         </div>
@@ -3792,7 +3793,7 @@ class Byd3DCard extends HTMLElement {
                 ? `
               <iframe
                 class="location-map-frame"
-                src="${this._locationMapDialog.embedUrl}"
+                src="${escapeHtml(this._locationMapDialog.embedUrl)}"
                 loading="lazy"
                 referrerpolicy="no-referrer-when-downgrade"
                 allowfullscreen
@@ -3803,7 +3804,7 @@ class Byd3DCard extends HTMLElement {
             <div class="map-dialog-actions">
               ${
                 this._locationMapDialog.externalUrl
-                  ? `<a class="map-dialog-link" href="${this._locationMapDialog.externalUrl}" target="_blank" rel="noopener noreferrer">${this._t("open_in_external_map")}</a>`
+                  ? `<a class="map-dialog-link" href="${escapeHtml(this._locationMapDialog.externalUrl)}" target="_blank" rel="noopener noreferrer">${this._t("open_in_external_map")}</a>`
                   : ""
               }
               <button class="dialog-btn cancel" data-map-dialog-action="close">${this._t("close")}</button>
@@ -3905,9 +3906,9 @@ class Byd3DCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <ha-card>
         <div class="wrap ${lowBattery ? "low" : ""}" style="--byd-hero-title-size:${titleFontSize}px;">
-          <div class="hero-title">${title}</div>
+          <div class="hero-title">${escapeHtml(title)}</div>
           <div class="hero">
-            <img class="car-image ${isAtto3Family ? "car-image-atto3" : ""}" src="${imageUrl}" data-fallback="${profile.image}" alt="${profile.label}" />
+            <img class="car-image ${isAtto3Family ? "car-image-atto3" : ""}" src="${escapeHtml(imageUrl)}" data-fallback="${escapeHtml(profile.image)}" alt="${escapeHtml(profile.label)}" />
             <div class="hero-overlay">
               ${heroHybridOverlay}
               ${serviceOverlay}
@@ -6198,7 +6199,7 @@ class Byd3DCardEditor extends HTMLElement {
         const localImage = localImages[key] || profile.image;
         return `
           <button class="profile ${active}" data-profile="${key}" title="${profile.label}">
-            <img src="${localImage}" data-fallback="${profile.image}" alt="${profile.label}" />
+            <img src="${escapeHtml(localImage)}" data-fallback="${escapeHtml(profile.image)}" alt="${profile.label}" />
             <span>${profile.label}</span>
           </button>
         `;
@@ -6687,7 +6688,7 @@ class Byd3DCardEditor extends HTMLElement {
           <section class="group">
             <div class="field">
               <label>${this._t("settings_card_title")}</label>
-              <input id="title" type="text" value="${this._config.title || ""}" placeholder="BYD ATTO 3" />
+              <input id="title" type="text" value="${escapeHtml(this._config.title || "")}" placeholder="BYD ATTO 3" />
             </div>
             <div class="field">
               <label>${this._t("settings_title_font_size")}</label>
@@ -6703,7 +6704,7 @@ class Byd3DCardEditor extends HTMLElement {
             </div>
             <div class="field">
               <label>${this._t("settings_prefix")}</label>
-              <input id="prefix" type="text" list="prefix_suggestions" value="${this._config.entity_prefix || ""}" placeholder="byd_atto_3" />
+              <input id="prefix" type="text" list="prefix_suggestions" value="${escapeHtml(this._config.entity_prefix || "")}" placeholder="byd_atto_3" />
               <datalist id="prefix_suggestions"></datalist>
               <small>${this._t("settings_prefix_help")}</small>
             </div>
@@ -6717,15 +6718,15 @@ class Byd3DCardEditor extends HTMLElement {
           <section class="group">
             <div class="field">
               <label>${this._t("settings_image_url")}</label>
-              <input id="image_url" type="text" value="${this._config.image_url || ""}" placeholder="/local/bydatoo3.png" />
+              <input id="image_url" type="text" value="${escapeHtml(this._config.image_url || "")}" placeholder="/local/bydatoo3.png" />
             </div>
             <div class="field">
               <label>${this._t("settings_image_base_path")}</label>
-              <input id="image_base_path" type="text" value="${this._config.image_base_path || ""}" placeholder="${DEFAULT_IMAGE_BASE_PATH}" />
+              <input id="image_base_path" type="text" value="${escapeHtml(this._config.image_base_path || "")}" placeholder="${escapeHtml(DEFAULT_IMAGE_BASE_PATH)}" />
             </div>
             <div class="field">
               <label>${this._t("settings_i18n_base_path")}</label>
-              <input id="i18n_base_path" type="text" value="${this._config.i18n_base_path || ""}" placeholder="${DEFAULT_I18N_BASE_PATH}" />
+              <input id="i18n_base_path" type="text" value="${escapeHtml(this._config.i18n_base_path || "")}" placeholder="${escapeHtml(DEFAULT_I18N_BASE_PATH)}" />
             </div>
             <div class="field">
               <label>${this._t("settings_refresh_interval")}</label>
