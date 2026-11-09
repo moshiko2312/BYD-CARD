@@ -4,7 +4,7 @@
 
 const CARD_TYPE = "byd-3d-card";
 const CARD_NAME = "BYD 3D Card";
-const CARD_VERSION = "1.0.24";
+const CARD_VERSION = "1.0.25";
 const DEFAULT_ASSET_BASE_PATH = (() => {
   try {
     const base = new URL(".", import.meta.url).pathname;
@@ -3167,8 +3167,8 @@ class Byd3DCard extends HTMLElement {
     const feedbackClass = this._buttonFeedbacks?.has(key) ? "btn-feedback" : "";
     return `
       <button class="action-btn ${active ? "active" : ""} ${extraClass} ${feedbackClass}" data-action="${handler}" data-key="${key}">
-        <ha-icon icon="${icon}"></ha-icon>
-        <span>${title}</span>
+        <ha-icon icon="${escapeHtml(icon)}"></ha-icon>
+        <span>${escapeHtml(title)}</span>
       </button>
     `;
   }
@@ -3304,7 +3304,7 @@ class Byd3DCard extends HTMLElement {
     const chargingHeadLabel = isCharging
       ? `<span class="charging-label"><span class="charging-icon">⚡</span><span class="charging-text">${this._t("charging_active")}</span></span>`
       : this._t("battery_status");
-    const powerMarkup = `<span class="power-pair"><span class="power-value">${powerDisplay}</span></span>`;
+    const powerMarkup = `<span class="power-pair"><span class="power-value">${escapeHtml(powerDisplay)}</span></span>`;
     const idleInBarMarkup = "";
 
     const tireKeys = [
@@ -3330,7 +3330,7 @@ class Byd3DCard extends HTMLElement {
                 : "#7ce89e";
         return `
           <div class="tire-card ${pressure !== null && pressure < tirePressureThresholds.critical ? "warn" : ""}">
-            <div class="tire-title">${label}</div>
+            <div class="tire-title">${escapeHtml(label)}</div>
             <div class="tire-value" style="color:${color}">${this._formatTirePressure(pressure, tirePressureUnit)} ${tirePressureUnitLabel}</div>
           </div>
         `;
@@ -3529,10 +3529,10 @@ class Byd3DCard extends HTMLElement {
               (item) => `
                 <div
                   class="hero-service-item tone-${item.tone} ${item.actionable ? "actionable" : "readonly"}"
-                  title="${item.label}"
+                  title="${escapeHtml(item.label)}"
                   data-indicator="${item.id}"
                 >
-                  <ha-icon icon="${item.icon}"></ha-icon>
+                  <ha-icon icon="${escapeHtml(item.icon)}"></ha-icon>
                 </div>
               `
             )
@@ -3835,7 +3835,7 @@ class Byd3DCard extends HTMLElement {
                         const escapedEntityId = escapeHtml(entityId);
                         return `
                           <button class="custom-entity-btn tone-${status.tone} ${status.active ? "is-active" : ""}" data-custom-entity="${escapedEntityId}" title="${label}">
-                            <ha-icon icon="${icon}"></ha-icon>
+                            <ha-icon icon="${escapeHtml(icon)}"></ha-icon>
                             <span class="custom-entity-name">${label}</span>
                             <span class="custom-entity-state">${escapeHtml(status.label)}</span>
                           </button>
@@ -3934,8 +3934,8 @@ class Byd3DCard extends HTMLElement {
                 const active = tab.key === this._activeCategory ? "active" : "";
                 return `
                   <button class="cat-tab ${active}" data-category="${tab.key}" aria-checked="${tab.key === this._activeCategory ? "true" : "false"}" role="radio">
-                    <ha-icon icon="${tab.icon}"></ha-icon>
-                    <span>${tab.label}</span>
+                    <ha-icon icon="${escapeHtml(tab.icon)}"></ha-icon>
+                    <span>${escapeHtml(tab.label)}</span>
                   </button>
                 `;
               })
@@ -6095,7 +6095,7 @@ class Byd3DCardEditor extends HTMLElement {
         return `
           <div class="category-order-item" draggable="true" data-key="${key}">
             <div class="category-order-main">
-              <ha-icon icon="${def.icon}"></ha-icon>
+              <ha-icon icon="${escapeHtml(def.icon)}"></ha-icon>
               <span>${this._categoryLabel(key)}</span>
             </div>
             <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
@@ -6242,7 +6242,7 @@ class Byd3DCardEditor extends HTMLElement {
         const active = mode === opt.key ? "active" : "";
         return `
           <button class="seat-mode-btn ${active}" data-seat-mode="${opt.key}" title="${opt.label}">
-            <ha-icon icon="${opt.icon}"></ha-icon>
+            <ha-icon icon="${escapeHtml(opt.icon)}"></ha-icon>
             <span>${opt.label}</span>
           </button>
         `;
